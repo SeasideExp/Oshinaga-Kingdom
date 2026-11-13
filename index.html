@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>お品書キングダム～沢山同人誌を並べます！ Ver.0.70f</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=M+PLUS+Rounded+1c:wght@400;700;800&family=Zen+Maru+Gothic:wght@400;700;900&family=Noto+Serif+JP:wght@400;700;900&family=Dela+Gothic+One&family=Kosugi+Maru&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-ui-theme="dark">
+<!-- ========== トップバー ========== -->
+<header class="topbar">
+  <div class="logo">
+    👑 <b>お品書キングダム</b><span>～沢山同人誌を並べます！</span>
+    <small class="ver-badge">Ver.0.70f</small>
+    <div class="topbar-links">
+      <button type="button" id="btnAbout" class="topbar-link-btn">このツールについて</button>
+      <button type="button" id="btnHelp" class="topbar-link-btn"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg> ヘルプ</button>
+    </div>
+  </div>
+  <div class="topbar-center-space"></div>
+  <div class="actions">
+    <button id="btnSaveCsv" class="primary" title="画像を埋め込んだCSV 1ファイルで保存 (Ctrl+S)"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg> CSV保存</button>
+    <label class="btn"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg> CSV読込<input type="file" id="fileCsv" accept=".csv,text/csv" hidden></label>
+  </div>
+</header>
+
+<!-- ========== メイン3カラム ========== -->
+<main class="app">
+  <!-- ===== 左：アイテム一覧（広大化・専用ペイン） ===== -->
+  <aside class="left">
+    <section class="panel grow lib-panel" id="libPanel">
+      <div class="lib-header">
+        <div class="lib-header-top">
+          <h2>アイテム一覧 <small id="itemCount">(0点)</small></h2>
+          <button type="button" id="btnOpenNewItem" class="btn-new-item gradate">＋ 新規アイテム登録</button>
+        </div>
+      </div>
+      <!-- 絞り込みフィルター＆一括操作バー -->
+      <div class="lib-filter-bar">
+        <div class="row" style="gap:4px;">
+          <select id="filterGenre" style="flex:1;font-size:11px;padding:3px 5px;" title="ジャンルで絞り込み">
+            <option value="all">すべてのジャンル</option>
+            <option value="none">未分類のみ</option>
+          </select>
+          <select id="filterPlaced" style="flex:1;font-size:11px;padding:3px 5px;" title="配置状態で絞り込み">
+            <option value="all">配置状態：すべて</option>
+            <option value="placed">配置中のみ</option>
+            <option value="unplaced">未配置のみ</option>
+          </select>
+        </div>
+        <div class="row" style="gap:4px;margin-top:4px;">
+          <select id="sortLibrary" style="flex:1;font-size:11px;padding:3px 5px;" title="アイテム一覧の並び順">
+            <option value="default">並び順：登録順</option>
+            <option value="pubdate_desc">発行年月：新しい順 (新→古)</option>
+            <option value="pubdate_asc">発行年月：古い順 (古→新)</option>
+            <option value="genre">ジャンル順</option>
+          </select>
+          <button type="button" id="btnToggleLibCols" class="sm" style="padding:2px 7px;font-size:11px;white-space:nowrap;" title="アイテム一覧の1列リスト表示と2列グリッド表示を切り替え">⊞ 2列</button>
+        </div>
+        <div class="row" style="gap:4px;margin-top:5px;">
+          <button id="btnPlaceFiltered" class="sm primary grow">表示中をすべて配置</button>
+          <button id="btnUnplaceFiltered" class="sm grow">表示中を配置解除</button>
+        </div>
+      </div>
+      <div id="library" class="library"></div>
+    </section>
+
+    <!-- 水平リサイザー（アイテム一覧とPOPの境界線ドラッグ Ver.0.67） -->
+    <div class="resizer-h" id="resizerLeftH" title="ドラッグしてアイテム一覧とPOPの高さを調整"></div>
+
+    <!-- ===== 左ペイン下部：POP一覧 ===== -->
+    <section class="panel pop-panel" id="popPanel">
+      <div class="lib-header">
+        <div class="lib-header-top">
+          <h2 style="font-size:13px;display:flex;align-items:center;gap:4px;margin:0;">
+            <span>💬 POP <small id="popCount">(0点)</small></span>
+          </h2>
+          <button type="button" id="btnOpenNewPop" class="btn-new-item gradate" style="font-size:11px;padding:4px 9px;">＋ 新規POP作成</button>
+        </div>
+      </div>
+      <div id="popLibrary" class="library pop-library"></div>
+    </section>
+  </aside>
+  <div class="resizer" id="resizerLeft" title="ドラッグして左ペイン幅を調整"></div>
+
+  <!-- ===== 中央：お品書きプレビュー＆配置操作 ===== -->
+  <section class="center">
+
+    <div class="canvas-toolbar">
+      <button id="btnToggleLeft" class="sm pane-toggle" title="アイテム一覧ペインの開閉 (Ctrl+B)">◀ アイテム一覧</button>
+      <button id="btnUndo" class="sm" title="元に戻す (Ctrl+Z)" disabled><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg> 元に戻す</button>
+      <button id="btnRedo" class="sm" title="やり直し (Ctrl+Y)" disabled><svg class="icon-svg" viewBox="0 0 24 24"><path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/></svg> やり直し</button>
+      <div class="grow" style="display:flex;align-items:center;justify-content:center;min-width:120px;">
+        <span id="toolbarCanvasSizeInfo" style="font-size:11px;color:var(--text-muted);font-weight:500;letter-spacing:0.02em;"></span>
+      </div>
+      <button id="btnQuickPng" class="gradate sm" title="お品書き画像の出力（SNS掲載用・印刷用PNG/PDF）"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg> お品書き出力</button>
+      <button id="btnQuickMini" class="sm" title="会場卓上・手元用の簡易お品書き（A6/B6）を出力"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> 簡易お品書き</button>
+      <button id="btnQuickSheet" class="sm" title="当日頒布物帳票（A4在庫・頒布管理表）を出力"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 8h-1V3H6v5H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zM8 5h8v3H8V5zm8 14H8v-4h8v4zm2-6.5c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></svg> 頒布物帳票</button>
+      <button id="btnToggleRight" class="sm pane-toggle" title="設定パネルの開閉 (Ctrl+Shift+B)">設定パネル ▶</button>
+    </div>
+
+    <!-- 配置アイテム編集バー（デフォルトで上側配置） -->
+    <div class="placed-bar" id="placedBar">
+      <div class="row" style="justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+        <div class="row" style="align-items:center; gap:8px;">
+          <strong style="font-size:12px;color:var(--text);"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6l1 1 1-1v-6h5v-2l-2-2z"/></svg> 配置中のアイテム <small id="placedCount" style="color:var(--muted);"></small></strong>
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--text-sub);cursor:pointer;margin-left:4px;user-select:none;">
+            <input type="checkbox" id="chkShowPlacedChips"> 配置中アイテムを表示
+          </label>
+          <button id="btnSortGenre" class="sm" title="ジャンル順に整列（配置アイテムをジャンルごとにまとまるよう整列します）"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg> ジャンル順</button>
+          <button id="btnSortDate" class="sm" title="発行年月順（新→古）（お品書き上の配置を発行年月が新しい順に整列します）"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zm-8 4h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/></svg> 発行年月順</button>
+          <button id="btnSortNew" class="sm" title="新刊・サイズ順に整列（新刊・大型目玉アイテムを先頭に整列します）">⭐ 新刊・サイズ順</button>
+        </div>
+        <div class="row" style="align-items:center; gap:6px;">
+          <button id="btnAddSpacer" class="sm primary" title="余白調整用の空白枠を配置列に追加します">＋ 空白枠を追加</button>
+        </div>
+      </div>
+      <div id="placedChips" class="placed-chips" style="display:none;"></div>
+      <div id="inspectorBar" class="inspector-controls" style="display:none;">
+        <strong id="inspItemName" style="color:var(--pink);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></strong>
+        <label id="inspSizeGrp">掲載サイズ
+          <select id="inspSize">
+            <option value="1">標準 (1枠)</option>
+            <option value="2">中 (2枠)</option>
+            <option value="3">大1 (4枠)</option>
+            <option value="4">大2 (6枠)</option>
+            <option value="5">超特大 (9枠)</option>
+          </select>
+        </label>
+        <label id="inspLabelGrp">ラベル
+          <select id="inspLabel"></select>
+        </label>
+        <input id="inspLabelText" type="text" placeholder="例：新刊 / 準新刊" style="width:105px;display:none;">
+        <input id="inspLabelColor" type="color" title="ラベル色">
+        <label id="inspSubLabelGrp">ラベル補
+          <select id="inspSubLabel"></select>
+        </label>
+        <input id="inspSubLabelText" type="text" placeholder="例：R18 / 僅少" style="width:105px;display:none;">
+        <input id="inspSubLabelColor" type="color" title="ラベル補色">
+        <div class="grow"></div>
+        <button id="btnMovePrev" class="sm">◀ 前へ</button>
+        <button id="btnMoveNext" class="sm">次へ ▶</button>
+        <button id="btnRemovePlaced" class="sm danger" title="お品書きから外す（データ一覧には残ります）">✖ 配置解除</button>
+      </div>
+    </div>
+
+    <!-- キャンバスステージ -->
+    <div class="canvas-stage" id="canvasStage">
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="preview" width="1920" height="1080"></canvas>
+      </div>
+    </div>
+  </section>
+  <div class="resizer" id="resizerRight" title="ドラッグして右ペイン幅を調整"></div>
+
+  <!-- ===== 右：ヘッダー・レイアウト・背景・出力設定 ===== -->
+  <aside class="right">
+    <div class="rtabs-bar">
+      <nav class="rtabs">
+        <button class="rtab active" data-tab="tabFile" data-tooltip="ファイル" title="ファイル"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg></button>
+        <button class="rtab" data-tab="tabHeader" data-tooltip="ヘッダー" title="ヘッダー"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2L2 9v11h20V9L12 2zm0 3.2L18.4 10H5.6L12 5.2zM4 18v-6h16v6H4z"/></svg></button>
+        <button class="rtab" data-tab="tabDesign" data-tooltip="デザイン" title="デザイン"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.17 19.49 10.54 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></button>
+        <button class="rtab" data-tab="tabOutput" data-tooltip="出力" title="出力"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 8h-1V3H6v5H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zM8 5h8v3H8V5zm8 14H8v-4h8v4zm2-6.5c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></svg></button>
+        <button class="rtab" data-tab="tabUi" data-tooltip="UI設定" title="UI設定"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
+      </nav>
+    </div>
+
+    <!-- タブ0：ファイル・保存・サンプル管理 -->
+    <div id="tabFile" class="rtab-body active">
+      <div class="setting-card file-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>✨ サンプルデータの読込</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field">
+            <span style="font-size:12px;line-height:1.4;color:var(--text-sub);margin-bottom:4px;display:block;">実際にアイテムを配置した状態のサンプル。これをカスタマイズしてお品書きを作る事も可能</span>
+            <select id="samplePresetSelect">
+              <option value="3">3種類サンプル</option>
+              <option value="6">6種類サンプル</option>
+              <option value="20" selected>20種類サンプル</option>
+              <option value="30">30種類サンプル</option>
+            </select>
+          </div>
+        <button type="button" id="btnSample" class="primary full">✨ 選択したサンプルを読み込む</button>
+        </div>
+      </div><div class="setting-card file-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3><svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> 新規作成（データ初期化）</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <button type="button" id="btnNew" class="full danger-btn"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> すべてを初期化して新規作成</button>
+        </div>
+      </div>
+      <div class="setting-card file-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3><svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg> ブラウザ内画像キャッシュ管理</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <p class="hint">ブラウザの内部ストレージ（IndexedDB）内に保存されている画像キャッシュ（書影・POP画像）を管理します。</p>
+          <div id="imageCacheSummary" style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;padding:8px 10px;background:var(--panel-2);border-radius:6px;border:1px solid var(--border);">
+            保存画像: 0枚（うち未使用: 0枚） / 約 0 KB
+          </div>
+          <button type="button" id="btnManageImages" class="primary full"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg> 保存されている画像一覧・削除</button>
+        </div>
+      </div><div class="setting-card file-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3><svg class="icon-svg" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg> フォルダ手動保存・読込</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <p class="hint">指定フォルダの <code>data</code> フォルダに oshinagaki.csv と images/ を一括書き出し・読み込みします（Chrome / Edge）。</p>
+        <div class="row" style="gap:8px;">
+          <button type="button" id="btnSaveFolder" style="flex:1;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg> フォルダへ保存</button>
+          <button type="button" id="btnLoadFolder" style="flex:1;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg> フォルダから読込</button>
+        </div>
+        </div>
+      </div></div>
+
+    <!-- タブ1：ヘッダー・イベント情報 -->
+    <div id="tabHeader" class="rtab-body">
+      <!-- 1. サークル・イベント基本情報 -->
+      <div class="setting-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2L2 9v11h20V9L12 2zm0 3.2L18.4 10H5.6L12 5.2zM4 18v-6h16v6H4z"/></svg> サークル・イベント基本情報</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field"><span>イベント名</span><input id="mEventName" placeholder="なんちゃらマーケットXXX"></div>
+          <div class="field"><span>イベント場所</span><input id="mPlace" placeholder="帝都国際見本市会場"></div>
+          <div class="field"><span>開催時間</span><input id="mTime" placeholder="10:30～16:00"></div>
+          <div class="field">
+            <span>日付 (1日目)</span>
+            <div class="row" style="gap:4px;">
+              <input id="mDate" readonly placeholder="カレンダーから日付を選択" style="flex:1;cursor:pointer;">
+              <input type="date" id="mDatePick" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;">
+              <button type="button" id="btnClearDate" class="sm" title="日付をクリア" style="padding:2px 8px;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+            </div>
+          </div>
+          <div class="field"><span>スペース</span><input id="mSpace" placeholder="東ア-99a"></div>
+          <div class="field"><span>サークル名</span><input id="mCircle" placeholder="架空サークル工房"></div>
+        </div>
+      </div>
+
+      <!-- 2. ヘッダーデザイン・配色 -->
+      <div class="setting-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>🎨 ヘッダーデザイン・配色</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field">
+            <span>配置モード</span>
+            <select id="lHeaderMode">
+              <option value="block">横置きブロック型（サークル左＋情報右）</option>
+              <option value="band">上部全幅帯型（イベント全体バー）</option>
+            </select>
+          </div>
+          <div class="field">
+            <span>ヘッダー内レイアウト</span>
+            <select id="lHeaderLayout">
+              <option value="space_focus" selected>スペース番号重視（右側にスペースを大きく表示）</option>
+              <option value="default">シンプルレイアウト（情報位置をまとめる）</option>
+            </select>
+          </div>
+
+          <!-- 詳細デザイン・配色設定（折りたたみ Ver.0.70） -->
+          <details class="header-detail-settings" id="detailsHeaderSettings" style="margin-top:8px;background:rgba(0,0,0,0.12);padding:8px 10px;border-radius:6px;border:1px solid var(--line);">
+            <summary style="cursor:pointer;font-weight:600;font-size:12px;user-select:none;color:var(--text);">⚙️ 詳細デザイン・配色設定を開く</summary>
+            <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">
+              <div class="field" id="rowHeaderSpaceWidth" style="display:flex;">
+                <span>スペース枠幅比率</span>
+                <div class="row"><input type="range" id="lHeaderSpaceWidth" min="20" max="60" step="1" value="36"><span id="valHeaderSpaceWidth">36%</span></div>
+              </div>
+              <div id="containerSpaceFocusOptions" style="display:flex;flex-direction:column;gap:8px;">
+                <div class="field">
+                  <span>スペース番号文字倍率</span>
+                  <div class="row"><input type="range" id="lHeaderSpaceScale" min="50" max="180" step="5" value="100"><span id="valHeaderSpaceScale">100%</span></div>
+                </div>
+                <div class="chk-row">
+                  <label><input type="checkbox" id="lShowHeaderSpaceBg"> スペース枠の地色を表示</label>
+                </div>
+                <div class="chk-row">
+                  <label><input type="checkbox" id="lShowHeaderSpaceBorder"> スペース枠の枠線を表示</label>
+                </div>
+              </div>
+              <div class="chk-row">
+                <label><input type="checkbox" id="lShowHeaderPlace"> イベント場所を表示</label>
+              </div>
+              <div class="chk-row">
+                <label><input type="checkbox" id="lShowHeaderTime"> 開催時間を表示</label>
+              </div>
+              <div class="chk-row">
+                <label><input type="checkbox" id="lShowHeaderEventBg" checked> イベント名部分のベース色を表示</label>
+              </div>
+              <div class="field" id="rowHeaderWidth">
+                <span>ヘッダー幅比率</span>
+                <div class="row"><input type="range" id="lHeaderWidth" min="20" max="60" value="40"><span id="valHeaderWidth">40%</span></div>
+              </div>
+              <div class="field">
+                <span>文字・ロゴ拡大率</span>
+                <div class="row"><input type="range" id="lHeaderScale" min="60" max="150" value="100"><span id="valHeaderScale">100%</span></div>
+              </div>
+              <div class="field">
+                <span>見出し演出効果</span>
+                <select id="lHeaderEffect">
+                  <option value="pop">くっきりポップ（太白縁取り）</option>
+                  <option value="shadow" selected>立体シャドウ（ふんわり影）</option>
+                  <option value="neon">ネオン発光（サイバーグロー）</option>
+                  <option value="stamp">スタンプ風（内側ステッチ）</option>
+                  <option value="flat">フラット（シンプル文字）</option>
+                </select>
+              </div>
+              <div class="chk-row">
+                <label><input type="checkbox" id="lHeaderPanel"> 半透明の見出し下敷きパネルを表示</label>
+              </div>
+              <div class="field" id="rowHeaderRadius">
+                <span>ヘッダーパネル角丸</span>
+                <div class="row"><input type="range" id="lHeaderRadius" min="0" max="4.0" step="0.2" value="1.5"><span id="valHeaderRadius">1.5</span></div>
+              </div>
+              <div class="field">
+                <span>文字色 / 縁色</span>
+                <div class="row">
+                  <input type="color" id="sHeaderText" value="#002b5c" title="文字色">
+                  <input type="color" id="sHeaderOutline" value="#ffffff" title="縁色">
+                </div>
+              </div>
+              <div class="field">
+                <span>パネル背景色</span>
+                <input type="color" id="sHeaderPanelColor" value="#ffffff">
+              </div>
+              <div class="field">
+                <span>パネル不透明度</span>
+                <div class="row"><input type="range" id="sHeaderPanelOpacity" min="0" max="1" step="0.02" value="0.88"><span id="valHeaderPanelOpacity">88%</span></div>
+              </div>
+            </div>
+          </details>
+
+          <button type="button" id="btnResetHeaderSettings" class="btn-subtle-reset">↺ この項目をデフォルトに戻す</button>
+        </div>
+      </div>
+
+      <!-- 3. 2日目参加情報（連日出展時） -->
+      <div class="setting-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2L2 9v11h20V9L12 2zm0 3.2L18.4 10H5.6L12 5.2zM4 18v-6h16v6H4z"/></svg> 2日目参加情報（連日出展時）</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="chk-row">
+            <label><input type="checkbox" id="mTwoDays"> 2日連続開催に対応する（帳票・ヘッダー）</label>
+          </div>
+          <div id="twoDaysBox" style="display:none;flex-direction:column;gap:6px;padding:8px;background:rgba(0,0,0,0.15);border-radius:6px;border:1px solid var(--line);">
+            <div class="field">
+              <span>2日目 日付</span>
+              <div class="row" style="gap:4px;">
+                <input id="mDate2" readonly placeholder="カレンダーから日付を選択" style="flex:1;cursor:pointer;">
+                <input type="date" id="mDate2Pick" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;">
+                <button type="button" id="btnClearDate2" class="sm" title="2日目日付をクリア" style="padding:2px 8px;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+              </div>
+            </div>
+            <div class="field"><span>2日目 スペース</span><input id="mSpace2" placeholder="西イ-99b（空欄なら共通）"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- タブ2：デザイン・全体レイアウト・背景 -->
+    <div id="tabDesign" class="rtab-body">
+      <!-- 1. 基本サイズ・デザインテーマ -->
+      <div class="setting-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>📐 基本サイズ・デザインテーマ</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field">
+            <span>お品書き画像サイズ</span>
+            <select id="selPreset"></select>
+          </div>
+          <div id="customSize" style="display:none;align-items:center;gap:6px;background:rgba(0,0,0,0.15);padding:6px 8px;border-radius:6px;border:1px solid var(--line);">
+            <input id="inpCanvasW" type="number" min="400" max="4096" step="10" value="1920" style="flex:1;">
+            <span>×</span>
+            <input id="inpCanvasH" type="number" min="400" max="4096" step="10" value="1080" style="flex:1;">
+            <span>px</span>
+          </div>
+          <div class="field">
+            <span>色調設定</span>
+            <select id="selColorMode">
+              <option value="classic" selected>クラシック（カラーユニバーサルデザインに対応していません・標準）</option>
+              <option value="cud">カラーユニバーサルデザイン（CUD対応）</option>
+            </select>
+          </div>
+          <div class="field">
+            <span>デザインプリセットテーマ</span>
+            <select id="selThemeQuick"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. チラシ全体レイアウト設定 -->
+      <div class="setting-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>🔲 チラシ全体レイアウト設定</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field">
+            <span>カード縦横比</span>
+            <select id="lCardAspect">
+              <option value="1.75">横長チラシ型（書影左＋情報右）</option>
+              <option value="1.45">セミワイド型</option>
+              <option value="0.82">縦長カード型（書影上＋情報下）</option>
+            </select>
+          </div>
+          <div class="field">
+            <span>配置・グループ化モード</span>
+            <select id="lGroupMode">
+              <option value="free">自由順グリッド配置（標準）</option>
+              <option value="genre_box">ジャンル別グループ枠（枠＋見出し帯）</option>
+              <option value="genre_color">ジャンル別カラーアクセント（枠のみ）</option>
+              <option value="genre_tab">ジャンル別カラーアクセント（タブあり）</option>
+            </select>
+          </div>
+          <div class="field">
+            <span>カード間余白</span>
+            <div class="row"><input type="range" id="lGap" min="0.2" max="6" step="0.2" value="1.8"><span id="valGap">1.8</span></div>
+          </div>
+          <div class="field">
+            <span>外周余白</span>
+            <div class="row"><input type="range" id="lPadding" min="0" max="15" step="0.5" value="5.5"><span id="valPadding">5.5</span></div>
+          </div>
+          <button type="button" id="btnResetLayoutSettings" class="btn-subtle-reset">↺ この項目をデフォルトに戻す</button>
+        </div>
+      </div>
+
+      <!-- 3. フォント設定 -->
+      <div class="setting-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>🔤 フォント設定</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field">
+            <span>見出しフォント</span>
+            <select id="sHeadingFont"></select>
+          </div>
+          <div class="field">
+            <span>本文フォント</span>
+            <select id="sBodyFont"></select>
+          </div>
+          <details class="font-manage-details" style="margin-top:8px;background:rgba(0,0,0,0.14);padding:8px 10px;border-radius:6px;border:1px solid var(--line);">
+            <summary style="cursor:pointer;font-weight:600;font-size:12px;user-select:none;color:var(--text);">🛠️ フォント追加・管理メニュー</summary>
+            <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">
+              <!-- 📁 フォントファイルから追加 -->
+              <div style="font-size:11px;color:var(--text-muted);font-weight:600;">📁 フォントファイルから追加</div>
+              <div id="fontFileDropZone" style="border:2px dashed var(--line);border-radius:6px;padding:12px 8px;text-align:center;cursor:pointer;font-size:11px;color:var(--text-muted);transition:background 0.2s,border-color 0.2s;user-select:none;">
+                ＋ フォントファイルを追加<br><span style="font-size:10px;opacity:0.8;">(.ttf / .otf / .woff / .woff2 複数可・D&amp;D可)</span>
+              </div>
+              <input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2,font/*" multiple hidden>
+              <div id="customFontList" style="display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;"></div>
+
+              <!-- 💻 PC搭載フォントを探してピックアップ -->
+              <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-top:4px;">💻 PC搭載フォントを探してピックアップ</div>
+              <button type="button" id="btnOpenPcFontModal" class="sm primary full" style="margin-top:2px;">💻 PC内のフォントから探して追加...</button>
+            </div>
+          </details>
+          <button type="button" id="btnResetFontSettings" class="btn-subtle-reset">↺ この項目をデフォルトに戻す</button>
+        </div>
+      </div>
+
+      <!-- 4. 書名・頒価・項目設定 -->
+      <div class="setting-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>📖 書名・頒価・項目設定</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field">
+            <span>全体の文字倍率</span>
+            <div class="row"><input type="range" id="lTextScale" min="70" max="135" value="100"><span id="valTextScale">100%</span></div>
+          </div>
+          <div class="field">
+            <span>新刊等のラベル形状</span>
+            <select id="lLabelStyle">
+              <option value="star">★星型バッジ（目立つ・POP風）</option>
+              <option value="ribbon">斜めリボン（カード左上）</option>
+              <option value="round_rect">角丸四角形（カード左上）</option>
+              <option value="circle">シンプルな円形（カード左上）</option>
+              <option value="tag">タグ風（カード右上）</option>
+            </select>
+          </div>
+          <details id="detailsLabelColors" style="margin-top:6px;background:rgba(0,0,0,0.12);padding:6px 10px;border-radius:6px;border:1px solid var(--line);">
+            <summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--text-muted);user-select:none;">🏷️ ラベルのカラー設定</summary>
+            <div id="labelColorList" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;"></div>
+          </details>
+          <details id="detailsSubLabelColors" style="margin-top:6px;background:rgba(0,0,0,0.12);padding:6px 10px;border-radius:6px;border:1px solid var(--line);">
+            <summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--text-muted);user-select:none;">🏷️ ラベル補のカラー設定</summary>
+            <div id="subLabelColorList" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;"></div>
+          </details>
+
+          <!-- 書名の設定 -->
+          <div class="setting-subgroup">
+            <div class="setting-subgroup-title">📖 書名（タイトル）の設定</div>
+            <div class="chk-row">
+              <label><input type="checkbox" id="lShowTitle" checked> 書名を表示</label>
+            </div>
+            <div class="field">
+              <span>書名の表示方法</span>
+              <select id="lTitleFit">
+                <option value="condense1" selected>1行に収める（長体圧縮・標準）</option>
+                <option value="wrap">自動改行（最大2行）</option>
+                <option value="condense2">最大2行＋長体圧縮</option>
+              </select>
+            </div>
+            <div class="field">
+              <span>書名サイズ倍率</span>
+              <div class="row"><input type="range" id="lTitleScale" min="50" max="160" step="5" value="100"><span id="valTitleScale">100%</span></div>
+            </div>
+          </div>
+
+          <!-- 頒価の設定 -->
+          <div class="setting-subgroup">
+            <div class="setting-subgroup-title">💰 頒価（価格）の設定</div>
+            <div class="field">
+              <span>頒価の表示形式</span>
+              <select id="lPriceStyle">
+                <option value="text">文字表示（シンプル太字）</option>
+                <option value="sticker">プライスシール風（小判型）</option>
+                <option value="ribbon">リボン・コーナー風</option>
+              </select>
+            </div>
+            <div class="field">
+              <span>頒価サイズ倍率</span>
+              <div class="row"><input type="range" id="lPriceTextScale" min="50" max="160" step="5" value="100"><span id="valPriceTextScale">100%</span></div>
+            </div>
+            <div class="field">
+              <span>値札領域の高さ倍率</span>
+              <div class="row"><input type="range" id="lPriceScale" min="60" max="180" step="5" value="100"><span id="valPriceScale">100%</span></div>
+            </div>
+          </div>
+
+          <!-- メタ情報（ジャンル・発行年月）の設定 -->
+          <div class="setting-subgroup">
+            <div class="setting-subgroup-title">🏷️ メタ情報（ジャンル・発行年月）の設定</div>
+            <div class="chk-row">
+              <label><input type="checkbox" id="lShowGenre"> ジャンルを表示</label>
+              <label><input type="checkbox" id="lShowDate"> 発行年月を表示</label>
+            </div>
+            <div class="field">
+              <span>メタ情報（タグ）サイズ倍率</span>
+              <div class="row"><input type="range" id="lMetaScale" min="50" max="160" step="5" value="100"><span id="valMetaScale">100%</span></div>
+            </div>
+          </div>
+
+          <!-- コメントの設定 -->
+          <div class="setting-subgroup">
+            <div class="setting-subgroup-title">💬 コメント（仕様・補足等）の設定</div>
+            <div class="chk-row">
+              <label><input type="checkbox" id="lShowSpec"> コメントを表示</label>
+            </div>
+            <div class="field">
+              <span>コメントサイズ倍率</span>
+              <div class="row"><input type="range" id="lSpecScale" min="50" max="160" step="5" value="100"><span id="valSpecScale">100%</span></div>
+            </div>
+          </div>
+          <button type="button" id="btnResetItemSettings" class="btn-subtle-reset">↺ この項目をデフォルトに戻す</button>
+        </div>
+      </div>
+
+      <!-- 5. カード配色・影 -->
+      <div class="setting-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>🎨 カード配色・影</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field">
+            <span>アクセント / 頒価</span>
+            <div class="row">
+              <input type="color" id="sAccent" value="#005aff" title="アクセント">
+              <input type="color" id="sPriceColor" value="#ff4b00" title="頒価">
+            </div>
+          </div>
+          <div class="field">
+            <span>カード背景 / 文字色</span>
+            <div class="row">
+              <input type="color" id="sCardBg" value="#ffffff" title="カード背景">
+              <input type="color" id="sCardText" value="#0f172a" title="カード文字">
+            </div>
+          </div>
+          <div class="field">
+            <span>カード不透明度</span>
+            <div class="row"><input type="range" id="sCardOpacity" min="0.4" max="1" step="0.05" value="0.95"><span id="valCardOpacity">95%</span></div>
+          </div>
+          <div class="field">
+            <span>カード角丸</span>
+            <div class="row"><input type="range" id="sRadius" min="0" max="6" step="0.5" value="1.5"><span id="valRadius">1.5</span></div>
+          </div>
+          <div class="chk-row">
+            <label><input type="checkbox" id="sShadow"> カードにドロップシャドウを落とす</label>
+          </div>
+          <div class="chk-row">
+            <label><input type="checkbox" id="sCardBorder" checked> カードに枠線を表示する</label>
+          </div>
+          <button type="button" id="btnResetCardStyle" class="btn-subtle-reset">↺ この項目をデフォルトに戻す</button>
+        </div>
+      </div>
+
+      <!-- 6. 全体背景設定 -->
+      <div class="setting-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>🖼️ 全体背景設定</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field">
+            <span>背景タイプ</span>
+            <select id="bType">
+              <option value="solid">単色カラー</option>
+              <option value="gradient">グラデーション</option>
+              <option value="radial">放射状グラデーション</option>
+              <option value="image">背景画像アップロード</option>
+            </select>
+          </div>
+
+          <!-- 背景画像エリア (Ver.0.53: サムネイルプレビュー・D&D・操作ボタン整備) -->
+          <div class="field">
+            <span style="font-size:11px;font-weight:600;">背景画像</span>
+            <input type="file" id="fileBgImg" accept="image/*" style="display:none;">
+            <div id="bgImgDropZone" style="border:2px dashed var(--line);border-radius:6px;padding:8px;background:rgba(0,0,0,0.12);transition:all 0.2s;cursor:pointer;">
+              <div id="bgImgEmptyState" style="text-align:center;padding:10px 6px;">
+                <div style="font-size:22px;margin-bottom:4px;">🖼️</div>
+                <div style="font-size:11px;color:var(--text-sub);margin-bottom:6px;">背景画像をドラッグ＆ドロップ または</div>
+                <button type="button" class="sm primary" id="btnSelectBgImg" style="padding:3px 10px;font-size:11px;">画像を選択</button>
+              </div>
+              <div id="bgImgActiveState" style="display:none;position:relative;align-items:center;gap:10px;padding:4px;">
+                <div style="width:52px;height:52px;border-radius:6px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;background:var(--bg);display:flex;align-items:center;justify-content:center;">
+                  <img id="bgImgThumb" src="" alt="背景サムネイル" style="max-width:100%;max-height:100%;object-fit:cover;">
+                </div>
+                <div style="flex:1;min-width:0;font-size:11px;">
+                  <div id="bgImgName" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;">背景画像設定中</div>
+                  <div class="row" style="gap:4px;margin-top:4px;">
+                    <button type="button" class="sm" id="btnChangeBgImg" style="padding:2px 8px;font-size:10px;">画像変更</button>
+                    <button type="button" class="sm danger" id="btnClearBgImg" style="padding:2px 8px;font-size:10px;">解除</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 背景画像 調整コントロール群 (Ver.0.53: 拡大率・位置XY・フィット・ぼかし・不透明度) -->
+          <div id="bgImageControls" style="display:none;flex-direction:column;gap:8px;background:rgba(0,0,0,0.15);padding:8px;border-radius:6px;border:1px solid var(--line);">
+            <div class="field" style="margin-bottom:0;">
+              <span>表示方法</span>
+              <select id="bImageFit">
+                <option value="cover">全体を覆う (cover)</option>
+                <option value="contain">全体を収める (contain)</option>
+                <option value="fill">引き伸ばし (fill)</option>
+                <option value="tile">敷き詰め (tile)</option>
+              </select>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <div class="row" style="justify-content:space-between;align-items:center;">
+                <span>拡大率</span>
+                <span id="valImageScale" style="font-size:11px;color:var(--pink);font-weight:700;">100%</span>
+              </div>
+              <div class="row"><input type="range" id="bImageScale" min="50" max="300" step="5" value="100"></div>
+            </div>
+            <div class="row" style="gap:8px;">
+              <div class="field" style="flex:1;margin-bottom:0;">
+                <div class="row" style="justify-content:space-between;align-items:center;">
+                  <span>横位置 X</span>
+                  <span id="valImageX" style="font-size:11px;color:var(--pink);font-weight:700;">0%</span>
+                </div>
+                <input type="range" id="bImageX" min="-100" max="100" step="1" value="0">
+              </div>
+              <div class="field" style="flex:1;margin-bottom:0;">
+                <div class="row" style="justify-content:space-between;align-items:center;">
+                  <span>縦位置 Y</span>
+                  <span id="valImageY" style="font-size:11px;color:var(--pink);font-weight:700;">0%</span>
+                </div>
+                <input type="range" id="bImageY" min="-100" max="100" step="1" value="0">
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <div class="row" style="justify-content:space-between;align-items:center;">
+                <span>ぼかし</span>
+                <span id="valImageBlur" style="font-size:11px;color:var(--text-sub);">0px</span>
+              </div>
+              <div class="row"><input type="range" id="bImageBlur" min="0" max="30" value="0"></div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <div class="row" style="justify-content:space-between;align-items:center;">
+                <span>不透明度</span>
+                <span id="valImageOpacity" style="font-size:11px;color:var(--text-sub);">100%</span>
+              </div>
+              <div class="row"><input type="range" id="bImageOpacity" min="0.1" max="1" step="0.05" value="1"></div>
+            </div>
+          </div>
+          <div class="field">
+            <span>背景カラー</span>
+            <div class="row">
+              <input type="color" id="bColor1" value="#bfe4ff" title="色1">
+              <input type="color" id="bColor2" value="#f0f8ff" title="色2">
+              <input type="range" id="bAngle" min="0" max="360" step="5" value="135" style="flex:1;" title="角度">
+              <span id="valBgAngle">135°</span>
+            </div>
+          </div>
+          <div class="field">
+            <span>パターン</span>
+            <select id="bPattern">
+              <option value="none">なし</option>
+              <option value="dots">水玉ドット</option>
+              <option value="grid">方眼グリッド</option>
+              <option value="stripes">斜めストライプ</option>
+              <option value="check">市松チェック</option>
+              <option value="rays">集中線</option>
+            </select>
+          </div>
+          <div class="field">
+            <span>パターン色・濃さ</span>
+            <div class="row">
+              <input type="color" id="bPatternColor" value="#ffffff" title="パターン色">
+              <input type="range" id="bPatternOpacity" min="0.05" max="1" step="0.05" value="0.6" style="flex:1;">
+              <span id="valBgPatternOpacity">60%</span>
+            </div>
+          </div>
+          <div class="field">
+            <span>パターンサイズ</span>
+            <div class="row">
+              <input type="range" id="bPatternSize" min="1" max="10" step="1" value="3" style="flex:1;">
+              <span id="valPatternSize">3</span>
+            </div>
+          </div>
+          <div class="field">
+            <span>背景オーバーレイ色・濃さ</span>
+            <div class="row">
+              <input type="color" id="bOverlayColor" value="#ffffff" title="オーバーレイ色">
+              <input type="range" id="bOverlayOpacity" min="0" max="1" step="0.05" value="0" style="flex:1;">
+              <span id="valOverlayOpacity">0%</span>
+            </div>
+          </div>
+          <div class="field">
+            <span>外枠フレーム</span>
+            <div class="row">
+              <input type="color" id="bBorderColor" value="#005aff" title="枠色">
+              <input type="range" id="bBorder" min="0" max="3" step="0.2" value="0" style="flex:1;">
+              <span id="valBgBorder">0</span>
+            </div>
+          </div>
+          <button type="button" id="btnResetBgSettings" class="btn-subtle-reset">↺ この項目をデフォルトに戻す</button>
+        </div>
+      </div>
+
+      <!-- 7. ジャンル別カラー設定（一番下に移動） -->
+      <div class="setting-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>🏷️ ジャンル別カラー設定</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div id="genreColorList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+      </div>
+
+      <!-- 8. ヘッダー・デザイン設定の保存／読込 (Ver.0.28) -->
+      <div class="setting-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3><svg class="icon-svg" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg> ヘッダー・デザイン設定の保存／読込</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body" style="gap:10px;">
+          <button type="button" id="btnExportDesignCsv" class="primary full"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> デザイン設定をCSV出力</button>
+          <label class="btn full" style="cursor:pointer;text-align:center;">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg> デザイン設定CSVを読込
+            <input type="file" id="fileDesignCsv" accept=".csv" hidden>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- タブ3：3種類の出力（SNS画像 / 簡易お品書き / 当日頒布物帳票） -->
+    <div id="tabOutput" class="rtab-body">
+      <!-- 1. お品書き画像 -->
+      <div class="setting-card output-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>1. お品書き画像の出力</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field">
+            <span>出力用途</span>
+            <select id="oPngMode">
+              <option value="sns" selected>SNS掲載用（Web・X投稿向け）</option>
+              <option value="print">印刷用（高解像度・用紙サイズ指定）</option>
+            </select>
+          </div>
+          <div class="field" id="rowPngSizeSns">
+            <span>出力解像度</span>
+            <select id="oPngSize">
+              <option value="orig">キャンバス原寸のまま出力</option>
+              <option value="2048">長辺 2048px（X高画質推奨）</option>
+              <option value="1920">長辺 1920px（フルHD標準）</option>
+              <option value="1600">長辺 1600px（軽量・高精細）</option>
+              <option value="1200">長辺 1200px（Web軽量）</option>
+            </select>
+          </div>
+          <div class="field" id="rowPngSizePrint" style="display:none;">
+            <span>印刷用解像度・用紙サイズ</span>
+            <select id="oPngPrintSize">
+              <option value="A4_300dpi" selected>A4 印刷最適 (300dpi・長辺3508px)</option>
+              <option value="B4_300dpi">B4 印刷最適 (300dpi・長辺4299px)</option>
+              <option value="B5_300dpi">B5 印刷最適 (300dpi・長辺3035px)</option>
+              <option value="orig">キャンバス原寸のまま出力</option>
+            </select>
+          </div>
+          <button id="btnOutPng" class="gradate full"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> お品書き画像をプレビュー・出力</button>
+          <button type="button" id="btnOutPngPdf" class="full"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg> お品書きをPDF出力</button>
+        </div>
+      </div>
+
+      <!-- 2. 簡易お品書き -->
+      <div class="setting-card output-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>2. 簡易お品書きの出力（会場卓上・手元用）</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field">
+            <span>掲載順（並び順）</span>
+            <select id="oMiniSort">
+              <option value="placed" selected>お品書きの配置順と同じ（標準）</option>
+              <option value="pubdate_desc">発行年月順（新しい順：新→古）</option>
+              <option value="pubdate_asc">発行年月順（古い順：古→新）</option>
+              <option value="genre">ジャンル順（同ジャンル内は発行年月順）</option>
+            </select>
+          </div>
+          <div class="field">
+            <span>用紙サイズ</span>
+            <div class="row">
+              <select id="oMiniSize">
+                <option value="A6">A6 (105×148mm)</option>
+                <option value="B6">B6 (128×182mm)</option>
+              </select>
+              <select id="oMiniOrient">
+                <option value="portrait">縦向き</option>
+                <option value="landscape">横向き</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <span>枚数収容</span>
+            <select id="oMiniPages">
+              <option value="auto">自動（点数に応じて1～4枚）</option>
+              <option value="1">1枚に凝縮して収める</option>
+              <option value="2">2枚に分けて大きく表示</option>
+              <option value="3">3枚に分けて表示</option>
+              <option value="4">4枚に分けて表示</option>
+            </select>
+          </div>
+          <div class="field">
+            <span>端数判定単位</span>
+            <select id="oMiniUnit">
+              <option value="500">500円単位以外を強調（推奨）</option>
+              <option value="0">なし（強調しない）</option>
+            </select>
+          </div>
+          <div class="field">
+            <span>端数強調方法</span>
+            <select id="oMiniEmphasis">
+              <option value="invert">黒地白抜き反転</option>
+              <option value="box">二重太枠＋網掛け強調</option>
+              <option value="none">強調しない</option>
+            </select>
+          </div>
+          <div class="chk-row">
+            <label><input type="checkbox" id="oMiniShowName"> 書名も併記</label>
+            <label><input type="checkbox" id="oMiniShowLabel"> 新刊等のラベル併記</label>
+            <label class="check"><input type="checkbox" id="oMiniShowSpec"> コメントを表示</label>
+          </div>
+          <button id="btnOutMini" class="primary full"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> 簡易お品書きをプレビュー・出力</button>
+          <button type="button" id="btnOutMiniPdf" class="full"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg> 簡易お品書きをPDF出力</button>
+        </div>
+      </div>
+
+      <!-- 3. 当日頒布物帳票 -->
+      <div class="setting-card output-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>3. 当日頒布物帳票の出力（A4在庫管理表）</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field">
+            <span>用紙の向き</span>
+            <select id="oSheetOrient">
+              <option value="portrait">A4 縦</option>
+              <option value="landscape">A4 横（2日開催時も見やすい）</option>
+            </select>
+          </div>
+          <div class="field">
+            <span>予備の空行</span>
+            <select id="oSheetExtraRows">
+              <option value="0">なし (0行)</option>
+              <option value="2" selected>2行追加（推奨）</option>
+              <option value="3">3行追加</option>
+              <option value="5">5行追加</option>
+            </select>
+          </div>
+          <div class="chk-row" style="margin-top:6px;">
+            <label class="check"><input type="checkbox" id="oSheetFitOnePage" checked> A4用紙1枚に必ず収める（点数に応じて行高・余白を自動調整）</label>
+          </div>
+          <div class="chk-row" style="margin-top:6px;">
+            <label class="check"><input type="checkbox" id="oSheetShowSpec"> 書名欄にコメントを表示する</label>
+          </div>
+          <button id="btnOutSheet" class="primary full"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 8h-1V3H6v5H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zM8 5h8v3H8V5zm8 14H8v-4h8v4zm2-6.5c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></svg> 当日頒布物帳票をプレビュー・印刷</button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- タブ4：UI設定（全体のUI変更メニュー・ダークモード） -->
+    <div id="tabUi" class="rtab-body">
+      <div class="setting-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>🌙 全体のUIカラーテーマ</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field">
+          <span>テーマ選択</span>
+          <select id="uiThemeSelect">
+            <option value="dark" selected>🌙 ダークモード（深濃紺）</option>
+            <option value="classic">🍷 クラシックダーク</option>
+            <option value="slate">🪨 スレートダーク（モノトーン系）</option>
+            <option value="light">☀️ ライトモード</option>
+            <option value="custom">🎨 カスタム色調設定</option>
+          </select>
+        </div>
+        </div>
+      </div><div class="setting-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>🎨 カスタム色調設定</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field">
+          <span>作業背景色</span>
+          <input type="color" id="uiCustBg" value="#070b14">
+        </div>
+        <div class="field">
+          <span>パネル背景色</span>
+          <input type="color" id="uiCustPanel" value="#0d1322">
+        </div>
+        <div class="field">
+          <span>メイン文字色</span>
+          <input type="color" id="uiCustText" value="#e2e8f5">
+        </div>
+        <div class="field">
+          <span>強調・アクセント色</span>
+          <input type="color" id="uiCustAccent" value="#3b82f6">
+        </div>
+        <button type="button" id="btnResetUiCust" class="sm" style="margin-top:4px;">デフォルト色調にリセット</button>
+        </div>
+      </div><div class="setting-card ui-folder open">
+        <div class="ui-folder-head">
+          <div class="ui-folder-title">
+            <span class="folder-arrow">▼</span>
+            <h3>🔤 UI文字サイズ・レイアウト</h3>
+          </div>
+        </div>
+        <div class="ui-folder-body">
+          <div class="field">
+          <span>UI文字サイズ</span>
+          <select id="uiFontSizeSelect">
+            <option value="12">コンパクト (12px)</option>
+            <option value="13" selected>標準 (13px)</option>
+            <option value="14">やや大きめ (14px)</option>
+            <option value="15">大きめ (15px)</option>
+          </select>
+        </div>
+        <div class="field">
+          <span>配置バーの表示位置</span>
+          <select id="uiPlacedBarPosSelect">
+            <option value="top" selected>上側（ツールバーの下・標準）</option>
+            <option value="bottom">下側（キャンバスの下）</option>
+          </select>
+        </div>
+        <div class="field">
+          <span>ステージ背景</span>
+          <select id="uiStageBgSelect">
+            <option value="stage-dark" selected>ダークグレー (標準)</option>
+            <option value="stage-black">漆黒ブラック</option>
+            <option value="stage-checker">チェッカー市松模様 (透過確認用)</option>
+            <option value="stage-light">ライトグレー</option>
+          </select>
+        </div>
+        <button id="btnResetUiSettings" class="danger sm full" style="margin-top:10px;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg> UI設定を初期状態（ダークモード）にリセット</button>
+      </div>
+    </div>
+    </div>
+  </aside>
+</main>
+
+<!-- ========== アイテム登録・編集モーダル ========== -->
+<div id="itemModalBackdrop" class="modal-backdrop modal-overlay">
+  <div class="modal modal-item-form">
+    <div class="modal-head">
+      <div class="row" style="gap:8px;align-items:center;">
+        <span id="formTitle">新規アイテム登録</span>
+        <small id="editModeBadge" style="display:none;background:var(--pink);color:#fff;padding:1px 6px;border-radius:4px;font-size:11px;">編集中</small>
+      </div>
+      <button type="button" id="btnItemModalClose" class="sm" style="background:rgba(255,255,255,0.18);color:#fff;border:none;">✖ 閉じる</button>
+    </div>
+    <div class="modal-body" style="padding:16px 20px;gap:12px;align-items:stretch;">
+      <div id="dropzone" class="dropzone" style="min-height:120px;">
+        <img id="formPreview" alt="書影プレビュー">
+        <p id="dropText">書影画像を選択<br><small>クリックまたはドラッグ＆ドロップ</small></p>
+        <input type="file" id="fileImg" accept="image/*" multiple hidden>
+      </div>
+      <div class="field">
+        <span>アイテム名 <small style="color:var(--pink);">*</small></span>
+        <input id="fName" placeholder="例：新刊タイトル / アクリルキーホルダー">
+      </div>
+      <div class="field">
+        <span>ジャンル</span>
+        <div class="row genre-row" style="gap:4px;">
+          <select id="fGenre" style="flex:1;">
+            <option value="">ジャンル未設定</option>
+          </select>
+          <input type="color" id="fGenreColor" title="選択中ジャンルの色" value="#ff4b00" style="width:34px;height:28px;padding:0;cursor:pointer;border-radius:4px;border:1px solid var(--line);background:none;">
+          <button type="button" id="btnAddGenre" class="sm">＋追加</button>
+          <button type="button" id="btnDelGenre" class="sm danger" title="選択中のジャンルを削除"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+        </div>
+      </div>
+      <div class="field">
+        <span>発行年月</span>
+        <input id="fDate" placeholder="例：2026年12月">
+      </div>
+      <div class="field">
+        <span>コメント</span>
+        <textarea id="fSpec" rows="2" placeholder="例：A5/36P/本文白黒&#10;新刊セット対象・会場限定おまけ付き" style="resize:vertical;font-size:12px;"></textarea>
+      </div>
+      <div class="field">
+        <span>頒価</span>
+        <div class="price-input">
+          <input id="fPrice" type="number" min="0" step="100" placeholder="500">
+          <span>円</span>
+        </div>
+      </div>
+      <div class="chk-row">
+        <label><input type="checkbox" id="fAutoPlace" checked> 登録時にお品書きへすぐ配置する</label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" id="btnItemClear" class="sm">クリア</button>
+      <div style="flex:1;"></div>
+      <button type="button" id="btnItemModalCancel" class="sm">キャンセル</button>
+      <button type="button" id="btnItemSave" class="primary">＋ 登録して配置</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== POP登録・編集モーダル ========== -->
+<div id="popModalBackdrop" class="modal-backdrop modal-overlay">
+  <div class="modal modal-pop-form" style="max-width:500px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-head">
+      <div class="row" style="gap:8px;align-items:center;">
+        <span id="popFormTitle">新規POP作成</span>
+        <small id="popEditModeBadge" style="display:none;background:var(--pink);color:#fff;padding:1px 6px;border-radius:4px;font-size:11px;">編集中</small>
+      </div>
+      <button type="button" id="btnPopModalClose" class="sm" style="background:rgba(255,255,255,0.18);color:#fff;border:none;">✖ 閉じる</button>
+    </div>
+    <div class="modal-body" style="padding:16px 20px;gap:12px;align-items:stretch;">
+      <div class="field">
+        <span>メイン文言（大見出し・画像のみの場合は空欄可）</span>
+        <textarea id="popTitleInput" rows="3" placeholder="例：新刊セットあります！ / 既刊全種持ち込み！" style="resize:vertical;"></textarea>
+      </div>
+      <div class="field">
+        <span>文言の表示方法</span>
+        <select id="popTitleFitInput">
+          <option value="condense1" selected>1行に収める（長体圧縮・標準）</option>
+          <option value="wrap">自動改行（複数行折り返し）</option>
+          <option value="condense2">改行維持＋はみ出し長体圧縮</option>
+        </select>
+      </div>
+      <div class="field">
+        <span>サブ文言（小見出し・補足）</span>
+        <input id="popSubInput" placeholder="例：特製ショッパー付き / 先着限定ペーパー配布">
+      </div>
+      <div class="field">
+        <span>デザインスタイル</span>
+        <select id="popStyleInput">
+          <option value="burst">💥 ギザギザ爆弾POP風（目玉アピール）</option>
+          <option value="banner">🎗️ 強調リボンバナー風（太帯グラデーション）</option>
+          <option value="ticket">🎟️ レトロチケット・クーポン風（破線ステッチ）</option>
+          <option value="speech">💬 コミック吹き出し・セリフ風（しっぽ付き）</option>
+          <option value="glass">✨ モダン・グラスタグ風（半透明光沢・バー）</option>
+          <option value="image_pop">🖼️ 画像配置・キャラPOP（トリミング・吹き出し対応）</option>
+          <option value="frame">🪧 ネオン看板・POP枠風（二重発光フレーム）</option>
+          <option value="simple_white">⬜ シンプル白地（白背景＋黒文字＋細枠）</option>
+          <option value="simple_black">⬛ シンプル黒地（黒背景＋白文字＋細枠）</option>
+        </select>
+      </div>
+      <div class="row" style="gap:12px;">
+        <div class="field" style="flex:1;">
+          <span>背景カラー</span>
+          <div class="row" style="gap:6px;">
+            <input type="color" id="popBgColorInput" value="#ff4b00" style="width:40px;height:32px;padding:0;cursor:pointer;">
+            <select id="popBgPresetSelect" style="flex:1;font-size:11px;">
+              <option value="">プリセット色...</option>
+              <option value="#ff4b00">CUD朱赤 (標準・高視認性)</option>
+              <option value="#005aff">CUDブルー (鮮やか青)</option>
+              <option value="#03af7a">CUDグリーン (青みの緑)</option>
+              <option value="#f6aa00">CUDオレンジ (黄みの橙)</option>
+              <option value="#990099">CUDパープル (赤紫)</option>
+              <option value="#804000">CUDブラウン (茶・アンバー)</option>
+              <option value="#1f2937">ダークブラック</option>
+              <option value="#e4007f">マゼンタピンク (クラシック)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" style="flex:1;">
+          <span>文字カラー</span>
+          <div class="row" style="gap:6px;">
+            <input type="color" id="popTextColorInput" value="#ffffff" style="width:40px;height:32px;padding:0;cursor:pointer;">
+            <select id="popTextPresetSelect" style="flex:1;font-size:11px;">
+              <option value="">プリセット色...</option>
+              <option value="#ffffff">白文字 (標準)</option>
+              <option value="#fff100">CUDイエロー文字 (明るい黄)</option>
+              <option value="#000000">黒文字 (高コントラスト)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <!-- 🖼️ 画像配置・トリミング＆吹き出し設定 (Ver.0.29) -->
+      <details class="pop-image-details" open style="background:var(--panel-2);padding:10px 12px;border-radius:8px;border:1px solid var(--border);">
+        <summary style="font-weight:700;font-size:12px;cursor:pointer;color:var(--text);user-select:none;">
+          🖼️ 画像配置・トリミング ＆ 吹き出し設定（任意）
+        </summary>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;">
+          <!-- 画像アップロード・プレビュー領域 -->
+          <div class="field">
+            <span style="font-size:11px;">キャラ・イラスト画像（立ち絵/書影/アイコン等）</span>
+            <input type="file" id="popImgFile" accept="image/*" style="display:none;">
+            <div id="popImgDropZone" class="pop-img-dropzone">
+              <div id="popImgEmptyState" style="text-align:center;padding:12px 6px;">
+                <div style="font-size:24px;margin-bottom:4px;">🖼️</div>
+                <div style="font-size:11px;color:var(--text-sub);margin-bottom:6px;">画像をドラッグ＆ドロップ または</div>
+                <button type="button" class="sm" id="btnPopImgSelect" style="padding:4px 10px;font-size:11px;">ファイルを選択</button>
+              </div>
+              <div id="popImgActiveState" style="display:none;position:relative;align-items:center;gap:10px;padding:6px;">
+                <div style="width:56px;height:56px;border-radius:6px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;background:var(--bg);display:flex;align-items:center;justify-content:center;">
+                  <img id="popImgThumb" src="" alt="POP画像プレビュー" style="max-width:100%;max-height:100%;object-fit:contain;">
+                </div>
+                <div style="flex:1;min-width:0;font-size:11px;">
+                  <div id="popImgName" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;">画像選択中</div>
+                  <button type="button" class="sm" id="btnPopImgChange" style="margin-top:4px;padding:2px 8px;font-size:10px;">画像変更</button>
+                  <button type="button" class="sm danger" id="btnPopImgClear" style="margin-top:4px;padding:2px 8px;font-size:10px;">解除</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- リアルタイムCanvasプレビュー領域 (Ver.0.33: 画像読込直下へ配置) -->
+          <div class="pop-live-preview-wrap">
+            <canvas id="popPreviewCanvas" width="480" height="300"></canvas>
+            <div class="pop-preview-drag-hint">🖱️ ドラッグで画像・文字位置移動 / ホイールで拡縮</div>
+          </div>
+
+          <!-- トリミング・位置調整 -->
+          <div id="popImgAdjustControls" style="display:flex;flex-direction:column;gap:8px;padding-top:4px;border-top:1px dashed var(--border);">
+            <div class="field" style="margin-bottom:0;">
+              <div class="row" style="justify-content:space-between;align-items:center;">
+                <span style="font-size:11px;">画像サイズ拡大率</span>
+                <span id="popImgScaleVal" style="font-size:11px;color:var(--pink);font-weight:700;">100%</span>
+              </div>
+              <input type="range" id="popImgScale" min="20" max="400" step="5" value="100">
+            </div>
+            <div class="row" style="gap:10px;">
+              <div class="field" style="flex:1;margin-bottom:0;">
+                <div class="row" style="justify-content:space-between;align-items:center;">
+                  <span style="font-size:11px;">位置 X</span>
+                  <span id="popImgXVal" style="font-size:11px;color:var(--pink);font-weight:700;">0%</span>
+                </div>
+                <input type="range" id="popImgX" min="-100" max="100" step="1" value="0">
+              </div>
+              <div class="field" style="flex:1;margin-bottom:0;">
+                <div class="row" style="justify-content:space-between;align-items:center;">
+                  <span style="font-size:11px;">位置 Y</span>
+                  <span id="popImgYVal" style="font-size:11px;color:var(--pink);font-weight:700;">0%</span>
+                </div>
+                <input type="range" id="popImgY" min="-100" max="100" step="1" value="0">
+              </div>
+            </div>
+          </div>
+
+          <!-- 背景透過・吹き出し・テキスト配置 -->
+          <div style="display:flex;flex-direction:column;gap:8px;padding-top:6px;border-top:1px dashed var(--border);">
+            <div class="chk-row">
+              <label style="font-size:11px;font-weight:700;cursor:pointer;">
+                <input type="checkbox" id="popShowBg" checked>
+                背景プレート・外枠を描画する（OFFで画像＋吹き出しのみ透過配置）
+              </label>
+            </div>
+            <div class="row" style="gap:10px;">
+              <div class="field" style="flex:1;margin-bottom:0;">
+                <span style="font-size:11px;">吹き出し・帯の形状</span>
+                <select id="popBubble" style="font-size:11px;">
+                  <option value="round" selected>💬 丸吹き出し（しっぽ付き）</option>
+                  <option value="shout">💥 ギザギザ・叫び吹き出し</option>
+                  <option value="plate">🏷️ 半透明帯・プレート</option>
+                  <option value="none">✨ なし（文字の縁取りのみ）</option>
+                </select>
+              </div>
+              <div class="field" style="flex:1;margin-bottom:0;">
+                <span style="font-size:11px;">テキスト配置領域</span>
+                <select id="popTextPos" style="font-size:11px;">
+                  <option value="bottom" selected>下部（標準）</option>
+                  <option value="top">上部</option>
+                  <option value="left">左側</option>
+                  <option value="right">右側</option>
+                  <option value="center">中央重ね</option>
+                  <option value="free">自由配置（微調整依存）</option>
+                </select>
+              </div>
+            </div>
+            <div class="row" style="gap:10px;">
+              <div class="field" style="flex:1;margin-bottom:0;" id="rowPopTailDir">
+                <span style="font-size:11px;">しっぽの向き</span>
+                <select id="popTailDir" style="font-size:11px;">
+                  <option value="auto" selected>自動（配置に連動）</option>
+                  <option value="top">上向き</option>
+                  <option value="bottom">下向き</option>
+                  <option value="left">左向き</option>
+                  <option value="right">右向き</option>
+                  <option value="none">しっぽなし</option>
+                </select>
+              </div>
+              <div class="field" style="flex:1;margin-bottom:0;" id="rowPopTailPos">
+                <div class="row" style="justify-content:space-between;align-items:center;">
+                  <span style="font-size:11px;">しっぽの位置</span>
+                  <span id="popTailPosVal" style="font-size:11px;color:var(--pink);font-weight:700;">35%</span>
+                </div>
+                <input type="range" id="popTailPos" min="15" max="85" step="1" value="35">
+              </div>
+            </div>
+            <div class="row" style="gap:10px;">
+              <div class="field" style="flex:1;margin-bottom:0;">
+                <div class="row" style="justify-content:space-between;align-items:center;">
+                  <span style="font-size:11px;">文字位置微調整 X</span>
+                  <span id="popTextXVal" style="font-size:11px;color:var(--pink);font-weight:700;">0%</span>
+                </div>
+                <input type="range" id="popTextX" min="-100" max="100" step="1" value="0">
+              </div>
+              <div class="field" style="flex:1;margin-bottom:0;">
+                <div class="row" style="justify-content:space-between;align-items:center;">
+                  <span style="font-size:11px;">文字位置微調整 Y</span>
+                  <span id="popTextYVal" style="font-size:11px;color:var(--pink);font-weight:700;">0%</span>
+                </div>
+                <input type="range" id="popTextY" min="-100" max="100" step="1" value="0">
+              </div>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <div class="chk-row">
+        <label><input type="checkbox" id="popAutoPlace" checked> 作成時にお品書きへすぐ配置する</label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" id="btnPopClear" class="sm">クリア</button>
+      <div style="flex:1;"></div>
+      <button type="button" id="btnPopModalCancel" class="sm">キャンセル</button>
+      <button type="button" id="btnPopSave" class="primary">＋ POPを保存して配置</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== このツールについて モーダル ========== -->
+<div id="aboutModalBackdrop" class="modal-backdrop modal-overlay">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-head">
+      <span>このツールについて</span>
+      <button type="button" id="btnAboutModalClose" class="sm" style="background:rgba(255,255,255,0.18);color:#fff;border:none;">✖ 閉じる</button>
+    </div>
+    <div class="modal-body" style="padding:20px;gap:16px;">
+      <div style="text-align:center;padding:6px 0;">
+        <div style="font-size:36px;margin-bottom:8px;">👑</div>
+        <h3 style="margin:0 0 6px;font-size:17px;color:var(--text);">お品書キングダム～沢山同人誌を並べます！</h3>
+        <span class="ver-badge" style="display:inline-block;margin-bottom:8px;">Ver.0.70f</span>
+      </div>
+      <div class="about-info-list" style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;background:var(--panel-alt);padding:14px 16px;border-radius:8px;border:1px solid var(--line);">
+        <div class="row" style="justify-content:space-between;align-items:center;">
+          <span style="color:var(--text-sub);">ツール名</span>
+          <b style="color:var(--text);">お品書キングダム～沢山同人誌を並べます！</b>
+        </div>
+        <div class="row" style="justify-content:space-between;align-items:center;">
+          <span style="color:var(--text-sub);">バージョン名</span>
+          <b style="color:var(--pink);">Ver.0.70f</b>
+        </div>
+        <div class="row" style="justify-content:space-between;align-items:center;">
+          <span style="color:var(--text-sub);">最終更新日</span>
+          <span style="color:var(--text);">2026年11月13日</span>
+        </div>
+        <div class="row" style="justify-content:space-between;align-items:center;">
+          <span style="color:var(--text-sub);">著作権表記</span>
+          <span style="color:var(--text);">(C)しーさいど</span>
+        </div>
+        <div class="row" style="justify-content:space-between;align-items:center;">
+          <span style="color:var(--text-sub);">ライセンス</span>
+          <span style="color:var(--text);">MIT License</span>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--text-sub);margin:0;line-height:1.6;">
+        同人誌即売会向けの美麗なお品書き画像（SNS用）、会場卓上用の簡易お品書き、当日頒布物帳票（A4在庫管理表）を一括作成・自動レイアウトするツールです。
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== ヘルプ モーダル ========== -->
+<div id="helpModalBackdrop" class="modal-backdrop modal-overlay">
+  <div class="modal modal-help" style="max-width: 780px; width: 95%; max-height: 88vh; display: flex; flex-direction: column;">
+    <div class="modal-head">
+      <div class="row" style="gap:8px;align-items:center;">
+        <span style="font-weight:700;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg> ヘルプ・ご利用ガイド</span>
+      </div>
+      <button type="button" id="btnHelpModalClose" class="sm" style="background:rgba(255,255,255,0.18);color:#fff;border:none;">✖ 閉じる</button>
+    </div>
+
+    <!-- クイックジャンプ目次バー -->
+    <div class="help-toc-bar">
+      <span class="help-toc-label"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg> 目次</span>
+      <div class="help-toc-links">
+        <button type="button" class="help-toc-btn" data-target="helpSecIntro">0. はじめに</button>
+        <button type="button" class="help-toc-btn" data-target="helpSecSteps">1. 使い方の流れ</button>
+        <button type="button" class="help-toc-btn" data-target="helpSecBackup">2. データ保存</button>
+        <button type="button" class="help-toc-btn" data-target="helpSecFaq">3. よくある質問</button>
+        <button type="button" class="help-toc-btn" data-target="helpSecTerms">4. ご利用について</button>
+      </div>
+    </div>
+
+    <div class="modal-body help-modal-body" id="helpModalBody" style="overflow-y:auto; padding:20px 24px; gap:24px;">
+      <!-- セクション0: 【0. はじめに】 -->
+      <section class="help-section" id="helpSecIntro">
+        <h3 class="help-section-title">【0. はじめに】</h3>
+        <div class="help-lead-box">
+          <p>このお品書き作成ツールは、作者（しーさいど）が同人誌即売会へ頻繁に参加し、かつ複数ジャンルに跨って新刊を多数作成するため、毎回お品書きを作るのが面倒すぎて、その状況を改善するために自分で作ったものです。作成にあたってはＡＩを全面活用しています（Gemini 3.8 Flash、Gemini 4 Argon）。</p>
+        </div>
+      </section>
+
+      <!-- セクション1: 【1. 使い方の流れ（かんたん4ステップ）】 -->
+      <section class="help-section" id="helpSecSteps">
+        <h3 class="help-section-title">📖 1. 使い方の流れ（かんたん4ステップ）</h3>
+        <p class="help-lead-desc">初めての方でも迷わずお品書きを作れる基本の4ステップです。</p>
+        
+        <div class="help-step-list">
+          <div class="help-step-card">
+            <div class="help-step-head">
+              <span class="help-step-badge">Step 1</span>
+              <h4 class="help-step-title">イベント情報とヘッダーを入力</h4>
+            </div>
+            <div class="help-step-content">
+              <ul>
+                <li>右ペインの「ヘッダー」タブで、日付、イベント名、スペース番号、サークル名、開催場所、開催時間などを入力します。</li>
+                <li>スペース番号重視レイアウトや見出し演出効果（くっきりポップ・立体シャドウ・ネオン発光・スタンプ風・フラットなど）、配色も好みに合わせて即時プレビューされます。</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="help-step-card">
+            <div class="help-step-head">
+              <span class="help-step-badge">Step 2</span>
+              <h4 class="help-step-title">アイテム・POPの登録</h4>
+            </div>
+            <div class="help-step-content">
+              <ul>
+                <li>左ペインの「＋ 新規アイテム登録」から表紙画像、タイトル、価格、ジャンル、コメント（仕様）を登録します。</li>
+                <li>目立たせたい告知（新刊・ノベルティ・決済案内など）は「＋ 新規POP作成」から作成できます。</li>
+              </ul>
+              <div class="help-tip-box">
+                <span class="help-tip-icon">💡</span>
+                <div class="help-tip-text">
+                  <b>裏ワザ（一括登録）:</b> 表紙画像をまとめてドラッグ＆ドロップするだけで、ファイル名から書名を自動設定して一括登録＆お品書きへ即座に並べることができます！
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="help-step-card">
+            <div class="help-step-head">
+              <span class="help-step-badge">Step 3</span>
+              <h4 class="help-step-title">並び順・サイズ・デザインの調整</h4>
+            </div>
+            <div class="help-step-content">
+              <ul>
+                <li>中央キャンバス上でカードをドラッグ＆ドロップ（または配置バーの「◀ / ▶」）して並び替えたり、画面上部（または下部）の配置バーでサイズ（1枠・2枠・4枠・6枠・9枠）を切り替えてイチオシ新刊を大きく目立たせます。</li>
+                <li>「＋ 空白枠を追加」を使うことで、2枠カードを中央に寄せたり自由な余白レイアウトが可能です。</li>
+                <li>右ペインの「デザイン」タブで背景テーマ、カード配色、枠線の有無、角丸、影、フォントを自由にカスタマイズできます。</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="help-step-card">
+            <div class="help-step-head">
+              <span class="help-step-badge">Step 4</span>
+              <h4 class="help-step-title">3種類のアウトプット（用途に応じた出力）</h4>
+            </div>
+            <div class="help-step-content">
+              <p style="margin:0 0 10px;color:var(--text-sub);font-size:13px;">右ペインの「出力」タブから、必要な形式をボタン1つで作成できます：</p>
+              <div class="help-output-grid">
+                <div class="help-output-item">
+                  <div class="help-output-item-title">1. お品書き画像（SNS掲載用・印刷用）</div>
+                  <div class="help-output-item-desc">X（旧Twitter）告知用の最適化PNG画像、またはA4/B4/B5などの印刷用高解像度PNG・PDF。プレビュー画面から別窓印刷にも対応しています。</div>
+                </div>
+                <div class="help-output-item">
+                  <div class="help-output-item-title">2. 簡易お品書き（卓上用）</div>
+                  <div class="help-output-item-desc">スペースの机上にスタンド等で立てて置けるコンパクトなお品書き（A6/B6）。掲載順の並び替えも可能です。</div>
+                </div>
+                <div class="help-output-item">
+                  <div class="help-output-item-title">3. 当日頒布物帳票（A4在庫管理表）</div>
+                  <div class="help-output-item-desc">当日の搬入数・補充数・残数・売上金額をスムーズに管理できるA4帳票（A4用紙1枚への自動収容フィット対応）。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- セクション2: 【2. データ保存・バックアップ方法（重要）】 -->
+      <section class="help-section" id="helpSecBackup">
+        <h3 class="help-section-title">💾 2. データ保存・バックアップ方法（重要）</h3>
+        <p class="help-lead-desc">作成データの安全な取り扱いについて解説します。</p>
+
+        <!-- データの保持と「CSV保存」の推奨について（重要警告） -->
+        <div class="help-alert-box">
+          <div class="help-alert-head">
+            <span class="help-alert-icon">⚠️</span>
+            <b>■ データの保持と「CSV保存」の推奨について（重要）</b>
+          </div>
+          <div class="help-alert-body">
+            <p>登録した頒布物・書影画像・POP・デザイン設定などの作業内容は、お使いのブラウザ内のストレージ領域（IndexedDB ／ LocalStorage）に自動的に保持される仕組みになっており、ページを再読み込みしても続きから作業できます。</p>
+            <p>ただし、ブラウザ内のストレージ領域で保持しているため、<strong>ブラウザの「キャッシュ・閲覧データ削除（サイトデータの消去）」を行ったり、シークレット（プライベート）ウィンドウを閉じたりすると、保持されていたデータが消えてしまう恐れがあります。</strong></p>
+            <p>大切なデータの消失を防ぐため、画面右上の <strong>「💾 CSV保存」ボタン</strong>（ショートカット: <kbd>Ctrl+S</kbd>）または「ファイル」タブの <strong>「📁 フォルダへ保存」</strong> から、こまめにCSVファイルとしてPC等のローカル環境へ保存しておくことを推奨します。</p>
+          </div>
+        </div>
+        
+        <div class="help-backup-grid">
+          <div class="help-backup-card">
+            <div class="help-backup-head">
+              <span class="help-backup-badge">自動保存 & Undo/Redo</span>
+              <h4 class="help-backup-title">自動保存＆元に戻す/やり直し（Undo/Redo）</h4>
+            </div>
+            <div class="help-backup-body">
+              <ul>
+                <li>入力内容やカード配置はブラウザ内（ローカルストレージ）に即座に自動保存されるため、誤って画面をリロードしても消えません。</li>
+                <li>操作を間違えた時は、中央ツールバーの「元に戻す（Ctrl+Z）」「やり直し（Ctrl+Y）」で直前の状態に復元できます。</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="help-backup-card">
+            <div class="help-backup-head">
+              <span class="help-backup-badge">アイテムCSV</span>
+              <h4 class="help-backup-title">CSV保存・読込（アイテムデータの保存）</h4>
+            </div>
+            <div class="help-backup-body">
+              <ul>
+                <li>トップバーの「CSV保存」を押すと、登録したアイテムや表紙画像を含むCSVファイルがダウンロードされます。次回イベントへのデータ引き継ぎや、Excel等での編集に最適です。</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="help-backup-card">
+            <div class="help-backup-head">
+              <span class="help-backup-badge">完全保存</span>
+              <h4 class="help-backup-title">フォルダまるごと保存・読込（完全バックアップ）</h4>
+            </div>
+            <div class="help-backup-body">
+              <ul>
+                <li>「フォルダ保存」機能を使えば、すべてのアイテム・配置・デザイン設定・ヘッダー情報が完全な形でバックアップされ、別のPCやブラウザ環境へそのまま復元できます。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- セクション3: 【3. よくありそうな質問（FAQ）】 -->
+      <section class="help-section" id="helpSecFaq">
+        <h3 class="help-section-title">❓ 3. よくありそうな質問（FAQ）</h3>
+        
+        <div class="help-faq-list">
+          <div class="help-faq-item">
+            <div class="help-faq-q">
+              <span class="faq-icon q">Q</span>
+              <span class="faq-q-text">配置したカードを取り外したい / 不要になったカードはどうする？</span>
+            </div>
+            <div class="help-faq-a">
+              <span class="faq-icon a">A</span>
+              <div class="faq-a-text">「配置中アイテムを表示」にチェックを入れるかキャンバス上のカードをクリックして「✖ 配置解除」ボタンを押すか、左ペインの「配置解除」ボタンを押すと、アイテム一覧（左ペイン）から消すことなく、お品書きへの配置だけを解除できます。再度配置したい時はアイテム一覧の「配置」ボタンを押すだけです。</div>
+            </div>
+          </div>
+
+          <div class="help-faq-item">
+            <div class="help-faq-q">
+              <span class="faq-icon q">Q</span>
+              <span class="faq-q-text">カードの並びで空きマスを作りたい（2枠カードを中央に置きたい等）</span>
+            </div>
+            <div class="help-faq-a">
+              <span class="faq-icon a">A</span>
+              <div class="faq-a-text">配置バーにある「＋ 空白枠を追加」ボタンを押すとスペーサー枠が追加されます。ドラッグしてカードの間に挟むことで、自由な余白を作ることができます（配置バーの表示位置はUI設定で上部／下部を切り替え可能です）。</div>
+            </div>
+          </div>
+
+          <div class="help-faq-item">
+            <div class="help-faq-q">
+              <span class="faq-icon q">Q</span>
+              <span class="faq-q-text">長いタイトルがカードからはみ出してしまう</span>
+            </div>
+            <div class="help-faq-a">
+              <span class="faq-icon a">A</span>
+              <div class="faq-a-text">本ツールには自動長体（フォント横幅圧縮）機能が備わっており、長い書名も枠内に自動で美しく収まるように計算されます。「デザイン」タブの「書名の表示方法」や「書名サイズ倍率」設定で微調整も可能です。</div>
+            </div>
+          </div>
+
+          <div class="help-faq-item">
+            <div class="help-faq-q">
+              <span class="faq-icon q">Q</span>
+              <span class="faq-q-text">自分のPCに入っている好きなフォントを使いたい</span>
+            </div>
+            <div class="help-faq-a">
+              <span class="faq-icon a">A</span>
+              <div class="faq-a-text">「デザイン」タブ内の「🛠️ フォント追加・管理メニュー」を展開し、「💻 PC内のフォントから探して追加...」（フォント検索・手入力）または「＋ フォントファイルを追加」から手持ちのフォントを読み込ませると、セレクトボックスに追加されてCanvas上に美しく反映されます。</div>
+            </div>
+          </div>
+
+          <div class="help-faq-item">
+            <div class="help-faq-q">
+              <span class="faq-icon q">Q</span>
+              <span class="faq-q-text">アップロードした画像やデータが外部に送信されないか心配</span>
+            </div>
+            <div class="help-faq-a">
+              <span class="faq-icon a">A</span>
+              <div class="faq-a-text">すべての画像処理・描画・データ保存はお使いのブラウザ内部（ローカル環境）で完結しており、外部サーバーへデータを送信することは一切ありません。完全オフライン環境でも動作しますので安心してご利用ください。</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- セクション4: 【4. ご利用について・動作環境・クレジット】 -->
+      <section class="help-section" id="helpSecTerms">
+        <h3 class="help-section-title">ℹ️ 4. ご利用について・動作環境・クレジット</h3>
+        
+        <div class="help-terms-grid">
+          <div class="help-terms-item">
+            <div class="help-terms-head">
+              <span class="help-terms-icon">📜</span>
+              <h4 class="help-terms-title">利用規約・ライセンス</h4>
+            </div>
+            <div class="help-terms-body">
+              <p>個人・サークル・法人問わず、同人活動・商業活動において完全無料でご自由にお使いいただけます（MIT License）。</p>
+              <p>本ツールを使って生成した画像・帳票のクレジット表記は不要（任意）です。</p>
+            </div>
+          </div>
+
+          <div class="help-terms-item">
+            <div class="help-terms-head">
+              <span class="help-terms-icon">💻</span>
+              <h4 class="help-terms-title">推奨動作環境</h4>
+            </div>
+            <div class="help-terms-body">
+              <p>Google Chrome, Microsoft Edge, Mozilla Firefox, Safari などの最新ブラウザ（PC環境推奨）。</p>
+            </div>
+          </div>
+
+          <div class="help-terms-item">
+            <div class="help-terms-head">
+              <span class="help-terms-icon">⚠️</span>
+              <h4 class="help-terms-title">免責事項</h4>
+            </div>
+            <div class="help-terms-body">
+              <p>本ツールの利用により生じたトラブルや損害等について、作者は一切の責任を負いかねます。大切なデータはこまめにCSVやフォルダ保存でバックアップをお取りください。</p>
+            </div>
+          </div>
+
+          <div class="help-terms-item">
+            <div class="help-terms-head">
+              <span class="help-terms-icon">🎨</span>
+              <h4 class="help-terms-title">素材クレジット</h4>
+            </div>
+            <div class="help-terms-body">
+              <p>EXPERIENCE JAPAN PICTOGRAMS (<a href="https://experience-japan.info/" target="_blank" rel="noopener" style="color:var(--pink);text-decoration:underline;">https://experience-japan.info/</a>) ほか、各種オープンソースWebフォント・ライブラリを使用しています。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- ========== モーダル（簡易お品書き / 帳票プレビュー / 確認ダイアログ） ========== -->
+<div id="modalBackdrop" class="modal-backdrop modal-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <span id="modalTitle">プレビュー</span>
+      <button id="btnModalClose" class="sm" style="background:rgba(255,255,255,0.18);color:#fff;border:none;">✖ 閉じる</button>
+    </div>
+    <div id="modalBody" class="modal-body"></div>
+    <div id="modalFoot" class="modal-foot"></div>
+  </div>
+</div>
+
+<!-- トースト通知 -->
+<div id="toastContainer" class="toast-container"></div>
+
+
+<!-- JavaScript モジュール分割読み込み（依存関係順） -->
+<!-- ========== ブラウザ内画像キャッシュ管理モーダル (Ver.0.33) ========== -->
+<div id="imageManagerModalBackdrop" class="modal-backdrop modal-overlay">
+  <div class="modal modal-image-manager" style="max-width:760px;max-height:88vh;display:flex;flex-direction:column;width:95%;">
+    <div class="modal-head">
+      <div class="row" style="gap:8px;align-items:center;">
+        <span style="font-weight:700;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg> 保存されている画像一覧・キャッシュ管理</span>
+      </div>
+      <button type="button" id="btnImageManagerClose" class="sm" style="background:rgba(255,255,255,0.18);color:#fff;border:none;">✖ 閉じる</button>
+    </div>
+    <div class="modal-body" style="padding:14px 18px;gap:12px;overflow-y:auto;flex:1;display:flex;flex-direction:column;align-items:stretch;">
+      <div class="row" style="justify-content:space-between;align-items:center;background:var(--panel-2);padding:10px 14px;border-radius:6px;border:1px solid var(--border);flex-wrap:wrap;gap:8px;">
+        <div id="modalImageStats" style="font-size:12px;font-weight:700;">
+          保存画像: 0枚 / 約 0 KB
+        </div>
+        <div class="row" style="gap:6px;flex-wrap:wrap;">
+          <button type="button" id="btnSelectUnusedImages" class="sm" style="padding:4px 8px;font-size:11px;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> 未使用を一括選択</button>
+          <button type="button" id="btnSelectAllImages" class="sm" style="padding:4px 8px;font-size:11px;">全選択/解除</button>
+          <button type="button" id="btnDeleteSelectedImages" class="sm danger" style="padding:4px 10px;font-size:11px;font-weight:700;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> 選択した画像を削除</button>
+          <button type="button" id="btnPurgeUnusedImages" class="sm" style="background:var(--pink);color:#fff;border:none;padding:4px 10px;font-size:11px;font-weight:700;border-radius:4px;cursor:pointer;">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19.36 2.72l1.42 1.42-3.14 3.14 1.41 1.41-1.41 1.41-1.42-1.41-7.07 7.07c-.39.39-.39 1.02 0 1.41l1.41 1.41c.39.39 1.02.39 1.41 0l7.07-7.07-1.41-1.41 1.41-1.41 1.41 1.41 3.14-3.14 1.42 1.42L19.36 2.72zM5.5 18c-1.38 0-2.5 1.12-2.5 2.5 0 1.1.9 2 2 2h5.5l-5-4.5z"/></svg> 未使用画像を削除
+          </button>
+        </div>
+      </div>
+      <div id="imageGridList" class="image-grid-list" style="width:100%;display:grid;grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));gap:10px;margin-top:6px;">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <div style="flex:1;"></div>
+      <button type="button" id="btnImageManagerFootClose" class="sm">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PC搭載フォント検索・ピックアップモーダル (Ver.0.39) ========== -->
+<div id="pcFontModalBackdrop" class="modal-backdrop modal-overlay">
+  <div class="modal modal-pc-font" style="max-width:740px;max-height:88vh;display:flex;flex-direction:column;width:95%;">
+    <div class="modal-head">
+      <div class="row" style="gap:8px;align-items:center;">
+        <span style="font-weight:700;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg> 💻 PC搭載フォントのピックアップ登録</span>
+      </div>
+      <button type="button" id="btnPcFontClose" class="sm" style="background:rgba(255,255,255,0.18);color:#fff;border:none;">✖ 閉じる</button>
+    </div>
+    <div class="modal-body" style="padding:14px 18px;gap:12px;overflow-y:auto;flex:1;display:flex;flex-direction:column;">
+      <p style="font-size:12px;color:var(--text-muted);margin:0;line-height:1.5;">
+        お使いのPCに搭載されている日本語フォントを検出・検索し、お品書きのフォント選択肢にピックアップ登録できます。<br>
+        チェックを入れたフォントは、見出し・本文フォントの選択肢に「ピックアップ済みPCフォント」として追加されます。
+      </p>
+
+      <!-- 上部アクションバー -->
+      <div class="row" style="gap:8px;flex-wrap:wrap;">
+        <button type="button" id="btnScanCommonFonts" class="sm primary" style="padding:6px 14px;font-weight:700;">
+          🔍 定番日本語フォントを自動検出
+        </button>
+        <button type="button" id="btnQueryAllLocalFonts" class="sm" style="padding:6px 14px;">
+          💻 PC内の全フォントを取得
+        </button>
+      </div>
+
+      <!-- 検索・絞り込み＆手入力追加バー -->
+      <div style="display:flex;flex-direction:column;gap:8px;background:var(--panel-2);padding:10px 12px;border-radius:6px;border:1px solid var(--border);">
+        <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="pcFontSearchInput" placeholder="フォント名で絞り込み (例: 明朝, ゴシック, HG, Klee...)" style="flex:1;min-width:180px;padding:6px 10px;font-size:12px;">
+          <label style="font-size:11.5px;display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;color:var(--text);white-space:nowrap;">
+            <input type="checkbox" id="pcFontFilterPicked"> ピックアップ済みのみ表示
+          </label>
+        </div>
+        <div class="row" style="gap:6px;align-items:center;">
+          <input type="text" id="pcFontManualInput" placeholder="フォント名を直接入力（例: 源ノ角ゴシック JP、HG創英角ﾎﾟｯﾌﾟ体）" style="flex:1;font-size:11px;padding:5px 8px;">
+          <button type="button" id="btnAddManualFont" class="sm" style="white-space:nowrap;padding:4px 10px;">＋ 追加</button>
+        </div>
+      </div>
+
+      <div id="pcFontStatus" style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;align-items:center;">
+        <span>表示中: 0件</span>
+        <span id="pcFontPickedCount" style="font-weight:700;color:var(--pink);">ピックアップ中: 0件</span>
+      </div>
+
+      <!-- フォント一覧リスト -->
+      <div id="pcFontModalList" style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--panel-2);">
+        <div style="text-align:center;color:var(--text-muted);padding:24px 0;font-size:12px;">
+          フォントを検出中...
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot" style="justify-content:space-between;">
+      <span style="font-size:11px;color:var(--text-muted);">※選択状態は自動保存され、次回以降も維持されます</span>
+      <button type="button" id="btnPcFontFootClose" class="sm primary" style="padding:6px 16px;">完了</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/csv.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/render.js"></script>
+<script src="js/outputs.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
