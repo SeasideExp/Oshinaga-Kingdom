@@ -1,5 +1,5 @@
 /* ==========================================================================
-   お品書キングダム スタイルシート (Ver.1.00)
+   お品書キングダム スタイルシート (Ver.1.02)
    ========================================================================== */
 
 /* ---------- カラーテーマ定義 (初期値: ダークモード) ---------- */
@@ -1322,10 +1322,13 @@ body[data-placed-bar-pos="bottom"] .placed-bar {
     grid-template-rows: auto auto auto;
     overflow-y: auto;
   }
-  .resizer { display: none; }
+  .resizer, .resizer-h { display: none; }
   .app.left-collapsed .left,
   .app.right-collapsed .right { display: none; }
-  .left, .right { max-height: 380px; }
+  .left { height: auto; max-height: none; }
+  .left .panel.grow { min-height: 200px; max-height: 280px; }
+  .pop-panel { height: auto; max-height: 240px; }
+  .right { max-height: 440px; }
   .canvas-stage { min-height: 360px; }
 }
 

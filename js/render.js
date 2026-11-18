@@ -584,7 +584,7 @@ const Render = (() => {
     if (L.showHeaderPlace === true && M.place) line1Parts.push(M.place);
     if (L.showHeaderTime === true && M.time) line1Parts.push(M.time);
     if (M.eventName) line1Parts.push(M.eventName);
-    const line1Text = line1Parts.join(' ／ ') || (M.eventName || 'イベント情報');
+    const line1Text = line1Parts.join(' ／ ');
 
     // 3段目：「（サークル名）お品書き」
     const circleTitle = `${M.circle ? M.circle + ' ' : ''}お品書き`;
@@ -608,20 +608,22 @@ const Render = (() => {
       const row1Y = y + padY + row1H / 2;
       const tagH = Math.min(row1H * 0.92, ih * 0.25);
 
-      if (L.showHeaderEventBg !== false) {
-        ctx.save();
-        ctx.fillStyle = S.accent || '#e4007f';
-        rr(ctx, x + padX, row1Y - tagH / 2, iw, tagH, tagH * 0.35);
-        ctx.fill();
-        const sz1 = fitSize(ctx, line1Text, 700, bf, tagH * 0.62 * scale, iw - tagH * 0.8, 9);
-        ctx.font = F(700, sz1, bf);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(line1Text, x + padX + tagH * 0.4, row1Y);
-        ctx.restore();
-      } else {
-        const sz1 = fitSize(ctx, line1Text, 700, bf, tagH * 0.72 * scale, iw, 9);
-        ctx.font = F(700, sz1, bf);
-        drawStyledText(ctx, line1Text, x + padX, row1Y, effect, S.accent || '#e4007f', S.headerOutline || '#ffffff', '#2b1b33', sz1);
+      if (line1Text) {
+        if (L.showHeaderEventBg !== false) {
+          ctx.save();
+          ctx.fillStyle = S.accent || '#e4007f';
+          rr(ctx, x + padX, row1Y - tagH / 2, iw, tagH, tagH * 0.35);
+          ctx.fill();
+          const sz1 = fitSize(ctx, line1Text, 700, bf, tagH * 0.62 * scale, iw - tagH * 0.8, 9);
+          ctx.font = F(700, sz1, bf);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(line1Text, x + padX + tagH * 0.4, row1Y);
+          ctx.restore();
+        } else {
+          const sz1 = fitSize(ctx, line1Text, 700, bf, tagH * 0.72 * scale, iw, 9);
+          ctx.font = F(700, sz1, bf);
+          drawStyledText(ctx, line1Text, x + padX, row1Y, effect, S.accent || '#e4007f', S.headerOutline || '#ffffff', '#2b1b33', sz1);
+        }
       }
 
       // 中段：日付＋スペース強調表示
@@ -657,20 +659,22 @@ const Render = (() => {
       const row1Y = y + padY + row1H / 2;
       const tagH = Math.min(row1H * 0.92, ih * 0.25);
 
-      if (L.showHeaderEventBg !== false) {
-        ctx.save();
-        ctx.fillStyle = S.accent || '#e4007f';
-        rr(ctx, x + padX, row1Y - tagH / 2, leftW, tagH, tagH * 0.35);
-        ctx.fill();
-        const sz1 = fitSize(ctx, line1Text, 700, bf, tagH * 0.62 * scale, leftW - tagH * 0.8, 9);
-        ctx.font = F(700, sz1, bf);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(line1Text, x + padX + tagH * 0.4, row1Y);
-        ctx.restore();
-      } else {
-        const sz1 = fitSize(ctx, line1Text, 700, bf, tagH * 0.72 * scale, leftW, 9);
-        ctx.font = F(700, sz1, bf);
-        drawStyledText(ctx, line1Text, x + padX, row1Y, effect, S.accent || '#e4007f', S.headerOutline || '#ffffff', '#2b1b33', sz1);
+      if (line1Text) {
+        if (L.showHeaderEventBg !== false) {
+          ctx.save();
+          ctx.fillStyle = S.accent || '#e4007f';
+          rr(ctx, x + padX, row1Y - tagH / 2, leftW, tagH, tagH * 0.35);
+          ctx.fill();
+          const sz1 = fitSize(ctx, line1Text, 700, bf, tagH * 0.62 * scale, leftW - tagH * 0.8, 9);
+          ctx.font = F(700, sz1, bf);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(line1Text, x + padX + tagH * 0.4, row1Y);
+          ctx.restore();
+        } else {
+          const sz1 = fitSize(ctx, line1Text, 700, bf, tagH * 0.72 * scale, leftW, 9);
+          ctx.font = F(700, sz1, bf);
+          drawStyledText(ctx, line1Text, x + padX, row1Y, effect, S.accent || '#e4007f', S.headerOutline || '#ffffff', '#2b1b33', sz1);
+        }
       }
 
       // 2段目（中段）：開催日（スペース番号は右側にあるため日付のみスッキリ表示）
@@ -748,10 +752,12 @@ const Render = (() => {
         drawStyledText(ctx, sp2Text, rightX + rightW / 2, boxY + boxH * 0.72, effect, spFillColor, spOutlineColor, '#1a1a1a', spSz);
       } else {
         // 単日または同一スペース（小バッジを省き、天地中央に大きく広く特大表示）
-        const spaceText = M.space || 'スペース番号';
-        const spSz = fitSize(ctx, spaceText, 900, hf, boxH * 0.72 * scale * spScale, rightW * 0.92, 14);
-        ctx.font = F(900, spSz, hf);
-        drawStyledText(ctx, spaceText, rightX + rightW / 2, boxY + boxH * 0.5, effect, spFillColor, spOutlineColor, '#1a1a1a', spSz);
+        const spaceText = M.space || '';
+        if (spaceText) {
+          const spSz = fitSize(ctx, spaceText, 900, hf, boxH * 0.72 * scale * spScale, rightW * 0.92, 14);
+          ctx.font = F(900, spSz, hf);
+          drawStyledText(ctx, spaceText, rightX + rightW / 2, boxY + boxH * 0.5, effect, spFillColor, spOutlineColor, '#1a1a1a', spSz);
+        }
       }
       ctx.restore();
     }
@@ -759,201 +765,366 @@ const Render = (() => {
     ctx.restore();
   }
 
+  /** HEXカラー簡易輝度計算 (0-255) */
+  function getHexLuminance(hex) {
+    let h = (hex || '#000000').replace('#', '');
+    if (h.length === 3) h = h.split('').map(c => c + c).join('');
+    const n = parseInt(h, 16) || 0;
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    return 0.299 * r + 0.587 * g + 0.114 * b;
+  }
+
   /** ラベル（新刊・既刊・自由入力など）の描画 */
-  function drawLabelBadge(ctx, lbl, style, x, y, w, h, fontFam, slot = 0) {
+  function drawLabelBadge(ctx, lbl, style, x, y, w, h, fontFam, slot = 0, cfg = {}) {
     if (!lbl || !lbl.text) return;
-    const base = Math.min(w, h);
+    const scale = Math.max(0.4, Math.min(2.0, (Number(cfg.labelScale) || 100) / 100));
+    const textScale = Math.max(0.5, Math.min(2.0, (Number(cfg.labelTextScale) || 100) / 100));
+    const angleDeg = Number(cfg.labelAngle) || 0;
+    const angleRad = (angleDeg * Math.PI) / 180;
+    const posRaw = cfg.labelPosition || 'auto';
+    const pos = (posRaw && posRaw !== 'auto') ? posRaw : (style === 'tag' ? 'tr' : 'tl');
+    const isRight = pos === 'tr' || pos === 'br';
+    const isBottom = pos === 'bl' || pos === 'br';
+    const borderMode = cfg.labelBorder || 'auto';
+    const borderScale = Math.max(0.2, Math.min(3.0, (Number(cfg.labelBorderWidth) || 100) / 100));
+    const useShadow = cfg.labelShadow !== false;
+    const cardRad = Number(cfg.cardRad) || 0;
+
+    const rawBase = Math.min(w, h);
+    const base = rawBase * scale;
+
+    const hasBorder = def => borderMode === 'on' ? true : (borderMode === 'off' ? false : def);
+    const applyShadow = (blur = 4, alpha = 0.22) => {
+      if (useShadow) {
+        ctx.shadowColor = `rgba(0,0,0,${alpha})`;
+        ctx.shadowBlur = blur;
+      } else {
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+      }
+    };
+    const clearShadow = () => {
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+    };
+    const drawTextFit = (text, tx, ty, targetSz, maxLimit, maxW, color = '#ffffff', minFont = 7) => {
+      const desired = Math.min(maxLimit, targetSz * textScale);
+      const sz = fitSize(ctx, text, 900, fontFam, desired, maxW, minFont);
+      ctx.font = F(900, sz, fontFam);
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const measuredW = ctx.measureText(text).width;
+      if (measuredW > maxW && measuredW > 0) {
+        ctx.save();
+        ctx.translate(tx, ty);
+        ctx.scale(maxW / measuredW, 1);
+        ctx.fillText(text, 0, 0);
+        ctx.restore();
+      } else {
+        ctx.fillText(text, tx, ty);
+      }
+    };
+
     ctx.save();
     if (style === 'ribbon') {
-      const rw = Math.min(w * 0.46, Math.max(base * 0.42, 64));
-      const rh = Math.max(18, base * 0.15);
-      const rx = x - base * 0.02;
-      let ry = y + base * 0.04;
-      if (slot === 1) {
-        ry += rh + Math.max(4, base * 0.025);
-      }
-      ctx.shadowColor = 'rgba(0,0,0,0.22)';
-      ctx.shadowBlur = 4;
+      const rw = Math.min(w * 0.48, Math.min(w * 0.46 * Math.max(1, scale), Math.max(base * 0.42, 64 * scale)));
+      const rh = Math.max(18 * scale, base * 0.15);
+      const gapY = Math.max(4, base * 0.025);
+      const cx = isRight ? (x + w + base * 0.02 - rw / 2) : (x - base * 0.02 + rw / 2);
+      const cy = isBottom
+        ? (y + h - base * 0.04 - rh / 2 - (slot === 1 ? rh + gapY : 0))
+        : (y + base * 0.04 + rh / 2 + (slot === 1 ? rh + gapY : 0));
+      const hw = rw / 2, hh = rh / 2;
+
+      ctx.translate(cx, cy);
+      if (angleRad) ctx.rotate(angleRad);
+      applyShadow(4, 0.22);
       ctx.fillStyle = lbl.color;
       ctx.beginPath();
-      ctx.moveTo(rx, ry);
-      ctx.lineTo(rx + rw, ry);
-      ctx.lineTo(rx + rw - rh * 0.35, ry + rh / 2);
-      ctx.lineTo(rx + rw, ry + rh);
-      ctx.lineTo(rx, ry + rh);
+      if (isRight) {
+        ctx.moveTo(hw, -hh);
+        ctx.lineTo(-hw, -hh);
+        ctx.lineTo(-hw + rh * 0.35, 0);
+        ctx.lineTo(-hw, hh);
+        ctx.lineTo(hw, hh);
+      } else {
+        ctx.moveTo(-hw, -hh);
+        ctx.lineTo(hw, -hh);
+        ctx.lineTo(hw - rh * 0.35, 0);
+        ctx.lineTo(hw, hh);
+        ctx.lineTo(-hw, hh);
+      }
       ctx.closePath();
       ctx.fill();
-      ctx.shadowColor = 'transparent';
-      const sz = fitSize(ctx, lbl.text, 900, fontFam, rh * 0.66, rw - rh * 0.6, 8);
-      ctx.font = F(900, sz, fontFam);
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(lbl.text, rx + (rw - rh * 0.2) / 2, ry + rh / 2);
+      clearShadow();
+      if (hasBorder(false)) {
+        ctx.lineWidth = Math.max(1.5, rh * 0.08) * borderScale;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+      }
+      drawTextFit(lbl.text, isRight ? (rh * 0.1) : (-rh * 0.1), 0, rh * 0.66, rh * 0.86, rw - rh * 0.6, '#ffffff', 8);
     } else if (style === 'round_rect') {
-      // round_rect: カード左上の角丸長方形バッジ (Ver.0.36)
-      const rw = Math.min(w * 0.44, Math.max(base * 0.38, 56));
-      const rh = Math.max(18, base * 0.14);
-      const rx = x + base * 0.03;
-      let ry = y + base * 0.03;
-      if (slot === 1) {
-        ry += rh + Math.max(4, base * 0.025);
-      }
-      const rad = Math.min(rh * 0.35, 8);
-      ctx.shadowColor = 'rgba(0,0,0,0.22)';
-      ctx.shadowBlur = 4;
-      ctx.fillStyle = lbl.color;
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(rx, ry, rw, rh, rad);
-      } else {
-        ctx.moveTo(rx + rad, ry);
-        ctx.arcTo(rx + rw, ry, rx + rw, ry + rh, rad);
-        ctx.arcTo(rx + rw, ry + rh, rx, ry + rh, rad);
-        ctx.arcTo(rx, ry + rh, rx, ry, rad);
-        ctx.arcTo(rx, ry, rx + rw, ry, rad);
-      }
-      ctx.closePath();
-      ctx.fill();
-      ctx.lineWidth = Math.max(2, rh * 0.08);
-      ctx.strokeStyle = '#ffffff';
-      ctx.stroke();
-      ctx.shadowColor = 'transparent';
+      // round_rect: 角丸長方形バッジ
+      const rw = Math.min(w * 0.48, Math.min(w * 0.44 * Math.max(1, scale), Math.max(base * 0.38, 56 * scale)));
+      const rh = Math.max(18 * scale, base * 0.14);
+      const margin = rawBase * 0.03;
+      const gapY = Math.max(4, base * 0.025);
+      const cx = isRight ? (x + w - margin - rw / 2) : (x + margin + rw / 2);
+      const cy = isBottom
+        ? (y + h - margin - rh / 2 - (slot === 1 ? rh + gapY : 0))
+        : (y + margin + rh / 2 + (slot === 1 ? rh + gapY : 0));
+      const rad = Math.min(rh * 0.35, 8 * scale);
 
-      const maxW = rw - rh * 0.4;
-      const sz = fitSize(ctx, lbl.text, 900, fontFam, rh * 0.62, maxW, 7);
-      ctx.font = F(900, sz, fontFam);
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const measuredW = ctx.measureText(lbl.text).width;
-      if (measuredW > maxW && measuredW > 0) {
-        ctx.save();
-        ctx.translate(rx + rw / 2, ry + rh / 2);
-        ctx.scale(maxW / measuredW, 1);
-        ctx.fillText(lbl.text, 0, 0);
-        ctx.restore();
-      } else {
-        ctx.fillText(lbl.text, rx + rw / 2, ry + rh / 2);
+      ctx.translate(cx, cy);
+      if (angleRad) ctx.rotate(angleRad);
+      applyShadow(4, 0.22);
+      ctx.fillStyle = lbl.color;
+      rr(ctx, -rw / 2, -rh / 2, rw, rh, rad);
+      ctx.fill();
+      clearShadow();
+      if (hasBorder(true)) {
+        ctx.lineWidth = Math.max(2, rh * 0.08) * borderScale;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
       }
+      drawTextFit(lbl.text, 0, 0, rh * 0.62, rh * 0.86, rw - rh * 0.4, '#ffffff', 7);
     } else if (style === 'circle') {
-      const r = Math.max(18, base * 0.15);
-      const cx = x + r * 0.95;
-      let cy = y + r * 0.95;
-      if (slot === 1) {
-        cy += r * 2.05;
-      }
-      ctx.shadowColor = 'rgba(0,0,0,0.25)';
-      ctx.shadowBlur = 5;
+      const r = Math.max(18 * scale, base * 0.15);
+      const cx = isRight ? (x + w - r * 0.95) : (x + r * 0.95);
+      const cy = isBottom
+        ? (y + h - r * 0.95 - (slot === 1 ? r * 2.05 : 0))
+        : (y + r * 0.95 + (slot === 1 ? r * 2.05 : 0));
+
+      ctx.translate(cx, cy);
+      if (angleRad) ctx.rotate(angleRad);
+      applyShadow(5, 0.25);
       ctx.fillStyle = lbl.color;
       ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
       ctx.fill();
-      ctx.lineWidth = Math.max(2, r * 0.1);
-      ctx.strokeStyle = '#ffffff';
-      ctx.stroke();
-      ctx.shadowColor = 'transparent';
-      const maxW = r * 1.68;
-      const sz = fitSize(ctx, lbl.text, 900, fontFam, r * 0.72, maxW, 7);
-      ctx.font = F(900, sz, fontFam);
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const measuredW = ctx.measureText(lbl.text).width;
-      if (measuredW > maxW && measuredW > 0) {
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.scale(maxW / measuredW, 1);
-        ctx.fillText(lbl.text, 0, 0);
-        ctx.restore();
-      } else {
-        ctx.fillText(lbl.text, cx, cy);
+      clearShadow();
+      if (hasBorder(true)) {
+        ctx.lineWidth = Math.max(2, r * 0.1) * borderScale;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
       }
+      drawTextFit(lbl.text, 0, 0, r * 0.72, r * 0.96, r * 1.68, '#ffffff', 7);
     } else if (style === 'tag') {
-      // tag: カード右上の荷札・ブックマーク風タグ (Ver.0.27)
-      const tw = Math.min(w * 0.38, Math.max(base * 0.34, 56));
-      const th = Math.max(16, base * 0.135);
-      let tx = x + w - tw - base * 0.03;
-      const ty = y + base * 0.03;
-      if (slot === 1) {
-        tx -= (tw + 6);
-      }
+      // tag: 荷札・ブックマーク風タグ
+      const tw = Math.min(w * 0.43, Math.min(w * 0.38 * Math.max(1, scale), Math.max(base * 0.34, 56 * scale)));
+      const th = Math.max(16 * scale, base * 0.135);
+      const margin = rawBase * 0.03;
+      const cx = isRight
+        ? (x + w - margin - tw / 2 - (slot === 1 ? tw + 6 : 0))
+        : (x + margin + tw / 2 + (slot === 1 ? tw + 6 : 0));
+      const cy = isBottom ? (y + h - margin - th / 2) : (y + margin + th / 2);
+      const hw = tw / 2, hh = th / 2;
       const cut = th * 0.35;
-      ctx.shadowColor = 'rgba(0,0,0,0.22)';
-      ctx.shadowBlur = 4;
+      const cr = Math.min(3, hh * 0.5);
+
+      ctx.translate(cx, cy);
+      if (angleRad) ctx.rotate(angleRad);
+      applyShadow(4, 0.22);
       ctx.fillStyle = lbl.color;
       ctx.beginPath();
-      ctx.moveTo(tx + cut, ty);
-      ctx.lineTo(tx + tw - 3, ty);
-      ctx.arcTo(tx + tw, ty, tx + tw, ty + 3, 3);
-      ctx.lineTo(tx + tw, ty + th - 3);
-      ctx.arcTo(tx + tw, ty + th, tx + tw - 3, ty + th, 3);
-      ctx.lineTo(tx + cut, ty + th);
-      ctx.lineTo(tx, ty + th / 2);
+      if (isRight) {
+        ctx.moveTo(-hw + cut, -hh);
+        ctx.lineTo(hw - cr, -hh);
+        ctx.arcTo(hw, -hh, hw, -hh + cr, cr);
+        ctx.lineTo(hw, hh - cr);
+        ctx.arcTo(hw, hh, hw - cr, hh, cr);
+        ctx.lineTo(-hw + cut, hh);
+        ctx.lineTo(-hw, 0);
+      } else {
+        ctx.moveTo(hw - cut, -hh);
+        ctx.lineTo(-hw + cr, -hh);
+        ctx.arcTo(-hw, -hh, -hw, -hh + cr, cr);
+        ctx.lineTo(-hw, hh - cr);
+        ctx.arcTo(-hw, hh, -hw + cr, hh, cr);
+        ctx.lineTo(hw - cut, hh);
+        ctx.lineTo(hw, 0);
+      }
       ctx.closePath();
       ctx.fill();
-      ctx.shadowColor = 'transparent';
-
+      clearShadow();
+      if (hasBorder(false)) {
+        ctx.lineWidth = Math.max(1.5, th * 0.08) * borderScale;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+      }
       // ハトメ穴
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(tx + cut * 0.85, ty + th / 2, Math.max(2, th * 0.12), 0, Math.PI * 2);
+      const holeX = isRight ? (-hw + cut * 0.85) : (hw - cut * 0.85);
+      ctx.arc(holeX, 0, Math.max(2, th * 0.12), 0, Math.PI * 2);
       ctx.fill();
 
-      // ラベル文字
-      const sz = fitSize(ctx, lbl.text, 900, fontFam, th * 0.62, tw - cut * 1.5, 7);
-      ctx.font = F(900, sz, fontFam);
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(lbl.text, tx + (tw + cut * 0.8) / 2, ty + th / 2);
+      drawTextFit(lbl.text, isRight ? (cut * 0.4) : (-cut * 0.4), 0, th * 0.62, th * 0.84, tw - cut * 1.5, '#ffffff', 7);
+    } else if (style === 'heart') {
+      // heart: ハート型（かわいい・推し活風）
+      const r = Math.max(19 * scale, base * 0.155);
+      const cx = isRight ? (x + w - r * 1.0) : (x + r * 1.0);
+      const cy = isBottom
+        ? (y + h - r * 1.0 - (slot === 1 ? r * 2.05 : 0))
+        : (y + r * 1.0 + (slot === 1 ? r * 2.05 : 0));
+
+      ctx.translate(cx, cy);
+      if (angleRad) ctx.rotate(angleRad);
+      applyShadow(5, 0.25);
+      ctx.beginPath();
+      ctx.moveTo(0, -r * 0.42);
+      ctx.bezierCurveTo(-r * 0.50, -r * 1.05, -r * 1.18, -r * 0.58, -r * 1.08, -r * 0.04);
+      ctx.bezierCurveTo(-r * 1.00,  r * 0.45, -r * 0.36,  r * 0.72,  0,        r * 0.94);
+      ctx.bezierCurveTo( r * 0.36,  r * 0.72,  r * 1.00,  r * 0.45,  r * 1.08, -r * 0.04);
+      ctx.bezierCurveTo( r * 1.18, -r * 0.58,  r * 0.50, -r * 1.05,  0,       -r * 0.42);
+      ctx.closePath();
+      ctx.fillStyle = lbl.color;
+      ctx.fill();
+      clearShadow();
+      if (hasBorder(true)) {
+        ctx.lineWidth = Math.max(2, r * 0.1) * borderScale;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+      }
+      drawTextFit(lbl.text, 0, -r * 0.02, r * 0.62, r * 0.80, r * 1.50, '#ffffff', 7);
+    } else if (style === 'corner_band') {
+      // corner_band: コーナー斜め帯（角を斜めに横切る帯）
+      if (cardRad > 0) {
+        rr(ctx, x, y, w, h, cardRad);
+      } else {
+        ctx.beginPath();
+        ctx.rect(x, y, w, h);
+      }
+      ctx.clip();
+
+      const bandH = Math.max(15 * scale, base * 0.135);
+      const baseDist = Math.max(24 * scale, base * 0.24);
+      const dist = baseDist + (slot === 1 ? (bandH + Math.max(3, rawBase * 0.025)) : 0);
+      const sx = isRight ? -1 : 1;
+      const sy = isBottom ? -1 : 1;
+      const cx = (isRight ? x + w : x) + sx * dist * Math.SQRT1_2;
+      const cy = (isBottom ? y + h : y) + sy * dist * Math.SQRT1_2;
+      const baseRot = (pos === 'tl' || pos === 'br') ? -Math.PI / 4 : Math.PI / 4;
+      const bandLen = (dist + bandH) * 3.4;
+
+      ctx.translate(cx, cy);
+      ctx.rotate(baseRot + angleRad);
+      applyShadow(4, 0.25);
+      ctx.fillStyle = lbl.color;
+      ctx.fillRect(-bandLen / 2, -bandH / 2, bandLen, bandH);
+      clearShadow();
+      if (hasBorder(true)) {
+        const bw = Math.max(1.5, bandH * 0.1) * borderScale;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = bw;
+        ctx.beginPath();
+        ctx.moveTo(-bandLen / 2, -bandH / 2);
+        ctx.lineTo(bandLen / 2, -bandH / 2);
+        ctx.moveTo(-bandLen / 2, bandH / 2);
+        ctx.lineTo(bandLen / 2, bandH / 2);
+        ctx.stroke();
+      }
+      const maxW = Math.max(18, (dist - bandH * 0.5) * 1.75);
+      drawTextFit(lbl.text, 0, 0, bandH * 0.64, bandH * 0.84, maxW, '#ffffff', 7);
+    } else if (style === 'stamp') {
+      // stamp: スタンプ・検印風（二重枠・ハンコ調）
+      const r = Math.max(18 * scale, base * 0.155);
+      const cx = isRight ? (x + w - r * 0.95) : (x + r * 0.95);
+      const cy = isBottom
+        ? (y + h - r * 0.95 - (slot === 1 ? r * 2.05 : 0))
+        : (y + r * 0.95 + (slot === 1 ? r * 2.05 : 0));
+      const baseRot = isRight ? 0.22 : -0.22;
+      const isTooBright = getHexLuminance(lbl.color) > 165;
+
+      ctx.translate(cx, cy);
+      ctx.rotate(baseRot + angleRad);
+
+      applyShadow(4, 0.20);
+      ctx.fillStyle = isTooBright ? 'rgba(30, 32, 44, 0.90)' : 'rgba(255, 255, 255, 0.92)';
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.fill();
+      clearShadow();
+
+      if (hasBorder(true)) {
+        ctx.strokeStyle = isTooBright ? 'rgba(255,255,255,0.4)' : '#ffffff';
+        ctx.lineWidth = Math.max(2, r * 0.09) * borderScale;
+        ctx.stroke();
+      }
+
+      // 外枠・内枠の二重円
+      ctx.strokeStyle = lbl.color;
+      ctx.lineWidth = Math.max(2, r * 0.11) * borderScale;
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 0.90, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.lineWidth = Math.max(1, r * 0.045) * borderScale;
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 0.74, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 検印風の上下区切り線
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      ctx.lineWidth = Math.max(1, r * 0.035) * borderScale;
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.50, -r * 0.34);
+      ctx.lineTo(r * 0.50, -r * 0.34);
+      ctx.moveTo(-r * 0.50, r * 0.34);
+      ctx.lineTo(r * 0.50, r * 0.34);
+      ctx.stroke();
+      ctx.restore();
+
+      drawTextFit(lbl.text, 0, 0, r * 0.62, r * 0.78, r * 1.32, lbl.color, 7);
     } else {
       // star: ギザギザ爆弾POP
-      const rOut = Math.max(20, base * 0.165);
+      const rOut = Math.max(20 * scale, base * 0.165);
       const rIn = rOut * 0.76;
-      const cx = x + rOut * 0.92;
-      let cy = y + rOut * 0.92;
-      if (slot === 1) {
-        cy += rOut * 2.05;
-      }
+      const cx = isRight ? (x + w - rOut * 0.92) : (x + rOut * 0.92);
+      const cy = isBottom
+        ? (y + h - rOut * 0.92 - (slot === 1 ? rOut * 2.05 : 0))
+        : (y + rOut * 0.92 + (slot === 1 ? rOut * 2.05 : 0));
       const spikes = 14;
-      ctx.shadowColor = 'rgba(0,0,0,0.25)';
-      ctx.shadowBlur = 5;
+
+      ctx.translate(cx, cy);
+      if (angleRad) ctx.rotate(angleRad);
+      applyShadow(5, 0.25);
       ctx.beginPath();
       for (let i = 0; i < spikes * 2; i++) {
         const r = i % 2 === 0 ? rOut : rIn;
         const a = (i * Math.PI) / spikes - Math.PI / 2;
-        const px = cx + Math.cos(a) * r;
-        const py = cy + Math.sin(a) * r;
+        const px = Math.cos(a) * r;
+        const py = Math.sin(a) * r;
         if (i === 0) ctx.moveTo(px, py);
         else ctx.lineTo(px, py);
       }
       ctx.closePath();
       ctx.fillStyle = lbl.color;
       ctx.fill();
-      ctx.lineWidth = Math.max(2, rOut * 0.09);
-      ctx.strokeStyle = '#ffffff';
-      ctx.stroke();
-      ctx.shadowColor = 'transparent';
-      ctx.translate(cx, cy);
-      ctx.rotate(-0.12);
-      const maxW = rIn * 1.68;
-      const sz = fitSize(ctx, lbl.text, 900, fontFam, rIn * 0.75, maxW, 7);
-      ctx.font = F(900, sz, fontFam);
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const measuredW = ctx.measureText(lbl.text).width;
-      if (measuredW > maxW && measuredW > 0) {
-        ctx.save();
-        ctx.scale(maxW / measuredW, 1);
-        ctx.fillText(lbl.text, 0, 0);
-        ctx.restore();
-      } else {
-        ctx.fillText(lbl.text, 0, 0);
+      clearShadow();
+      if (hasBorder(true)) {
+        ctx.lineWidth = Math.max(2, rOut * 0.09) * borderScale;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
       }
+      ctx.rotate(-0.12);
+      drawTextFit(lbl.text, 0, 0, rIn * 0.75, rIn * 0.98, rIn * 1.68, '#ffffff', 7);
     }
     ctx.restore();
+  }
+
+  /** メインラベルとサブラベル（ラベル補）をまとめて描画 */
+  function drawPlacedLabels(ctx, lbl, subLbl, labelStyle, x, y, w, h, hf, cfg) {
+    if (lbl && subLbl) {
+      drawLabelBadge(ctx, lbl, labelStyle, x, y, w, h, hf, 0, cfg);
+      drawLabelBadge(ctx, subLbl, labelStyle, x, y, w, h, hf, 1, cfg);
+    } else if (lbl) {
+      drawLabelBadge(ctx, lbl, labelStyle, x, y, w, h, hf, 0, cfg);
+    } else if (subLbl) {
+      drawLabelBadge(ctx, subLbl, labelStyle, x, y, w, h, hf, 0, cfg);
+    }
   }
 
   /** 書影がない場合のプレースホルダー表紙描画 */
@@ -1414,10 +1585,22 @@ const Render = (() => {
           ctx.lineWidth = 1;
           ctx.stroke();
         }
-        ctx.fillStyle = (style === 'glass') ? '#111827' : textColor;
+        const subColor = (style === 'glass' || style === 'simple_white')
+          ? (textColor === '#ffffff' ? '#111827' : textColor)
+          : textColor;
+        ctx.fillStyle = subColor;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(sub, x + w / 2, subPlateY + subH / 2);
+        const maxSubTextW = Math.max(10, subPlateW - subH * 0.5);
+        if (subTextW > maxSubTextW && subTextW > 0) {
+          ctx.save();
+          ctx.translate(x + w / 2, subPlateY + subH / 2);
+          ctx.scale(maxSubTextW / subTextW, 1);
+          ctx.fillText(sub, 0, 0);
+          ctx.restore();
+        } else {
+          ctx.fillText(sub, x + w / 2, subPlateY + subH / 2);
+        }
         ctx.restore();
 
         mainAvailH = h * 0.58;
@@ -1427,7 +1610,10 @@ const Render = (() => {
         mainCenterY = y + h / 2;
       }
 
-      drawMainTitleLines(ctx, title, titleFit, availW, mainAvailH, x + w / 2, mainCenterY, hf, style, bgColor, textColor);
+      const stdTextColor = (style === 'glass' || style === 'simple_white')
+        ? (textColor === '#ffffff' ? '#111827' : textColor)
+        : textColor;
+      drawMainTitleLines(ctx, title, titleFit, availW, mainAvailH, x + w / 2, mainCenterY, hf, style, bgColor, stdTextColor);
 
     } else {
       // 🖼️ 画像配置・吹き出し・自由位置対応テキスト描画 (Ver.0.29)
@@ -1469,8 +1655,9 @@ const Render = (() => {
       bBoxX += (textX / 100) * (w * 0.4);
       bBoxY += (textY / 100) * (h * 0.4);
 
-      // 吹き出し・プレートの描画
-      if (bubble !== 'none') {
+      // 吹き出し・プレートの描画（外側が既にspeech吹き出しで画像がない場合は二重吹き出しを抑止）
+      const skipInnerRound = (style === 'speech' && showBg && !imageId && bubble === 'round');
+      if (bubble !== 'none' && !skipInnerRound) {
         ctx.save();
         ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
         ctx.shadowBlur = 8;
@@ -1486,7 +1673,8 @@ const Render = (() => {
         if (bubble === 'round') {
           // 💬 丸吹き出し（しっぽ付き） (Ver.0.35)
           const bRad = Math.max(8, Math.min(bBoxW, bBoxH) * 0.16);
-          const effDir = resolveTailDir(tailDir, style, textPos);
+          // 外側背景自体がしっぽ付きspeechの場合は内側のしっぽを省略して二重しっぽを防止
+          const effDir = (style === 'speech' && showBg) ? 'none' : resolveTailDir(tailDir, style, textPos);
           const posRatio = (num(tailPos, 35)) / 100;
 
           buildSpeechBubblePath(ctx, bBoxX, bBoxY, bBoxW, bBoxH, bRad, effDir, posRatio);
@@ -1546,6 +1734,9 @@ const Render = (() => {
       const tPadX = bBoxW * 0.08;
       const tAvailW = bBoxW - tPadX * 2;
       const tAvailH = bBoxH * 0.90;
+      const effectiveTextColor = (bubble !== 'none' && (style === 'simple_white' || style === 'glass'))
+        ? (textColor === '#ffffff' ? '#111827' : textColor)
+        : textColor;
 
       let mCY, mAH;
       if (sub) {
@@ -1553,16 +1744,30 @@ const Render = (() => {
         const sSz = sH * 0.65;
         ctx.font = F(700, sSz, bf);
         const sPlateY = bBoxY + bBoxH * 0.08;
+        const subTextW = ctx.measureText(sub).width;
+        const subPlateW = Math.min(tAvailW, subTextW + sH * 1.2);
 
         ctx.save();
         ctx.fillStyle = (bubble === 'none' && !showBg) ? 'rgba(0, 0, 0, 0.65)' : 'rgba(0, 0, 0, 0.22)';
-        rr(ctx, bBoxX + (bBoxW - Math.min(tAvailW, ctx.measureText(sub).width + sH * 1.2)) / 2, sPlateY, Math.min(tAvailW, ctx.measureText(sub).width + sH * 1.2), sH, sH * 0.35);
+        rr(ctx, bBoxX + (bBoxW - subPlateW) / 2, sPlateY, subPlateW, sH, sH * 0.35);
         ctx.fill();
 
-        ctx.fillStyle = (style === 'glass' || (bubble !== 'none' && (style === 'simple_white' || style === 'glass'))) ? '#111827' : '#ffffff';
+        const subFillColor = (bubble === 'none' && !showBg)
+          ? '#ffffff'
+          : effectiveTextColor;
+        ctx.fillStyle = subFillColor;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(sub, bBoxX + bBoxW / 2, sPlateY + sH / 2);
+        const maxSubTextW = Math.max(10, subPlateW - sH * 0.5);
+        if (subTextW > maxSubTextW && subTextW > 0) {
+          ctx.save();
+          ctx.translate(bBoxX + bBoxW / 2, sPlateY + sH / 2);
+          ctx.scale(maxSubTextW / subTextW, 1);
+          ctx.fillText(sub, 0, 0);
+          ctx.restore();
+        } else {
+          ctx.fillText(sub, bBoxX + bBoxW / 2, sPlateY + sH / 2);
+        }
         ctx.restore();
 
         mAH = tAvailH * 0.68;
@@ -1572,7 +1777,6 @@ const Render = (() => {
         mCY = bBoxY + bBoxH / 2;
       }
 
-      const effectiveTextColor = (bubble !== 'none' && (style === 'simple_white' || style === 'glass')) ? (textColor === '#ffffff' ? '#111827' : textColor) : textColor;
       drawMainTitleLines(ctx, title, titleFit, tAvailW, mAH, bBoxX + bBoxW / 2, mCY, hf, style, bgColor, effectiveTextColor, bubble === 'none');
     }
     }
@@ -1581,14 +1785,8 @@ const Render = (() => {
     const lbl = resolveLabel(placed, st.labelColors);
     const subLbl = resolveSubLabel(placed, st.subLabelColors);
     const labelStyle = st.layout?.labelStyle || 'star';
-    if (lbl && subLbl) {
-      drawLabelBadge(ctx, lbl, labelStyle, x, y, w, h, hf, 0);
-      drawLabelBadge(ctx, subLbl, labelStyle, x, y, w, h, hf, 1);
-    } else if (lbl) {
-      drawLabelBadge(ctx, lbl, labelStyle, x, y, w, h, hf, 0);
-    } else if (subLbl) {
-      drawLabelBadge(ctx, subLbl, labelStyle, x, y, w, h, hf, 0);
-    }
+    const labelCfg = { ...(st.layout || {}), cardRad: Math.max(8, Math.min(w, h) * 0.04) };
+    drawPlacedLabels(ctx, lbl, subLbl, labelStyle, x, y, w, h, hf, labelCfg);
 
     // 5. 選択枠
     if (opts && (opts.selected || (opts.preview && opts.selectedUid && opts.selectedUid === placed.uid))) {
@@ -1830,11 +2028,20 @@ const Render = (() => {
       ctx.fillStyle = effectiveAccent;
       ctx.fill();
 
-      // タブ文字（白抜き太字、中央配置）
+      // タブ文字（白抜き太字、中央配置・長体フィット対応）
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(item.genre, tabX + tabW / 2, tabY + (tabH - 2) / 2);
+      const maxTabTextW = Math.max(8, tabW - tabPadX * 1.2);
+      if (gTextW > maxTabTextW && gTextW > 0) {
+        ctx.save();
+        ctx.translate(tabX + tabW / 2, tabY + (tabH - 2) / 2);
+        ctx.scale(maxTabTextW / gTextW, 1);
+        ctx.fillText(item.genre, 0, 0);
+        ctx.restore();
+      } else {
+        ctx.fillText(item.genre, tabX + tabW / 2, tabY + (tabH - 2) / 2);
+      }
       ctx.restore();
     }
 
@@ -1857,12 +2064,40 @@ const Render = (() => {
 
       let txtY = iy;
       let txtH = ih;
-      // 横長カードで右上タグ風ラベルが存在する場合、テキスト上端をタグ高さ分下へオフセットして重なりを完全防止
-      if ((lbl || subLbl) && labelStyle === 'tag') {
-        const base = Math.min(cardW, cardH);
-        const tagH = Math.max(16, base * 0.135) + base * 0.03 + 3;
-        txtY += tagH;
-        txtH = Math.max(10, txtH - tagH);
+      const effectiveLabelPos = (L.labelPosition && L.labelPosition !== 'auto')
+        ? L.labelPosition
+        : (labelStyle === 'tag' ? 'tr' : 'tl');
+      // 横長カードで右上にラベルが存在する場合、テキスト上端をラベル高さ分下へオフセットして重なりを防止
+      if ((lbl || subLbl) && effectiveLabelPos === 'tr') {
+        const lScale = Math.max(0.4, Math.min(2.0, (Number(L.labelScale) || 100) / 100));
+        const rawBase = Math.min(cardW, cardH);
+        const base = rawBase * lScale;
+        const lblCount = (lbl && subLbl) ? 2 : 1;
+        const gapY = Math.max(4, base * 0.025);
+        let reserveH = 0;
+        if (labelStyle === 'tag') {
+          reserveH = Math.max(16 * lScale, base * 0.135) + rawBase * 0.03 + 3;
+        } else if (labelStyle === 'round_rect') {
+          const rh = Math.max(18 * lScale, base * 0.14);
+          reserveH = rawBase * 0.03 + rh * lblCount + (lblCount === 2 ? gapY : 0) + 3;
+        } else if (labelStyle === 'ribbon') {
+          const rh = Math.max(18 * lScale, base * 0.15);
+          reserveH = base * 0.04 + rh * lblCount + (lblCount === 2 ? gapY : 0) + 3;
+        } else if (labelStyle === 'corner_band') {
+          const bandH = Math.max(15 * lScale, base * 0.135);
+          const baseDist = Math.max(24 * lScale, base * 0.24);
+          const dist = baseDist + (lblCount === 2 ? (bandH + Math.max(3, rawBase * 0.025)) : 0);
+          reserveH = (dist + bandH * 0.5) * Math.SQRT1_2 + 2;
+        } else {
+          // star, circle, heart, stamp
+          const r = Math.max(19 * lScale, base * 0.155);
+          reserveH = r * (lblCount === 2 ? 2.5 : 1.75);
+        }
+        reserveH = Math.min(ih * 0.44, Math.max(0, reserveH - (iy - cardY)));
+        if (reserveH > 0) {
+          txtY += reserveH;
+          txtH = Math.max(10, txtH - reserveH);
+        }
       }
       txtBox = { x: ix + imgW + pad * 0.85, y: txtY, w: Math.max(10, iw - imgW - pad * 0.85), h: txtH };
     } else {
@@ -1944,19 +2179,18 @@ const Render = (() => {
       if (showGenre && showDate && (gW + dW + tagSz * 0.4 > txtBox.w)) {
         isTagWrapped = true;
       }
+      // 書名表示時、タグ行が上部エリアを占有しすぎて書名が消えるのを防止
+      const rawTagH = isTagWrapped ? tagLineH * 2 : tagLineH;
+      const maxTagAreaH = showTitle ? availInfoH * 0.44 : availInfoH * 0.65;
+      if (rawTagH > maxTagAreaH && rawTagH > 0) {
+        const shrink = maxTagAreaH / rawTagH;
+        tagSz = Math.max(6.5, tagSz * shrink);
+        tagLineH = tagSz * 1.28;
+      }
     }
     const totalTagH = hasTagLine ? (isTagWrapped ? tagLineH * 2 : tagLineH) : 0;
 
-    // 2. コメント（仕様・補足等）情報の計算（最大3行対応）
-    let sSz = 0, sLines = [], specH = 0;
-    if (showSpec && item.spec) {
-      sSz = Math.max(8, Math.min(availInfoH * 0.16, txtBox.w * 0.082) * tScale * specScale);
-      ctx.font = F(500, sSz, bf);
-      sLines = wrap(ctx, item.spec, txtBox.w, 3);
-      specH = sLines.length * (sSz * 1.22) + 4;
-    }
-
-    // 3. 書名の計算・スケーリング・行分割＆重なり防止クランプ
+    // 2. 書名の計算・スケーリング・行分割＆重なり防止クランプ（書名をコメントより優先して領域確保）
     let tSz = 0, tLines = [], titleH = 0;
     if (showTitle) {
       const titleText = item.name || '無題アイテム';
@@ -1983,7 +2217,7 @@ const Render = (() => {
         }
       }
 
-      tSz = Math.max(10, Math.min(availInfoH * tSzFactor, txtBox.w * 0.22) * tScale * titleScale);
+      tSz = Math.max(9.5, Math.min(availInfoH * tSzFactor, txtBox.w * 0.22) * tScale * titleScale);
       ctx.font = F(900, tSz, hf);
 
       // 行分割
@@ -2024,8 +2258,9 @@ const Render = (() => {
         tLines = wrap(ctx, titleText, txtBox.w, maxTitleLines);
       }
 
-      // 【重要】書名が頒価領域に絶対に重ならないよう、利用可能高さ（availTitleH）にクランプガード
-      const availTitleH = Math.max(10, availInfoH - totalTagH - specH);
+      // コメント（仕様）を表示する場合も書名用に最低限の領域を保証
+      const availAfterTag = Math.max(10, availInfoH - totalTagH);
+      const availTitleH = showSpec ? Math.max(Math.min(availAfterTag, 16), availAfterTag * 0.62) : availAfterTag;
       const estTitleH = tLines.length * (tSz * 1.24);
       if (estTitleH > availTitleH) {
         const clampedTsz = availTitleH / (tLines.length * 1.24);
@@ -2034,12 +2269,25 @@ const Render = (() => {
         } else if (tLines.length > 1) {
           // 複数行で文字が小さくなりすぎる場合は1行に収めて長体化
           tLines = [titleText];
-          tSz = Math.max(9, Math.min(tSz, availTitleH / 1.24));
+          tSz = Math.max(8.5, Math.min(tSz, availTitleH / 1.24));
         } else {
-          tSz = Math.max(9, clampedTsz);
+          tSz = Math.max(8.5, clampedTsz);
         }
       }
       titleH = tLines.length * (tSz * 1.24);
+    }
+
+    // 3. コメント（仕様・補足等）情報の計算（書名の残余スペース内に収める）
+    let sSz = 0, sLines = [], specH = 0;
+    if (showSpec && item.spec) {
+      const remainForSpec = Math.max(0, availInfoH - totalTagH - titleH);
+      if (remainForSpec >= 11) {
+        sSz = Math.max(7.5, Math.min(availInfoH * 0.16, txtBox.w * 0.082) * tScale * specScale);
+        ctx.font = F(500, sSz, bf);
+        const maxSpecLines = Math.max(1, Math.min(3, Math.floor((remainForSpec - 3) / (sSz * 1.22))));
+        sLines = wrap(ctx, item.spec, txtBox.w, maxSpecLines);
+        specH = sLines.length * (sSz * 1.22) + 4;
+      }
     }
 
     // 4. テキスト＋価格ブロック全体の総高さ算出 & 天地中央凝縮レイアウト
@@ -2060,7 +2308,7 @@ const Render = (() => {
         const gText = item.genre;
         const gW = ctx.measureText(gText).width;
         const padX = tagSz * 0.45;
-        const badgeW = gW + padX * 2;
+        const badgeW = Math.min(txtBox.w, gW + padX * 2);
         const badgeH = tagSz * 1.25;
 
         const gBadgeColor = getGenreColor(gText, S.accent, st);
@@ -2072,7 +2320,7 @@ const Render = (() => {
         ctx.stroke();
 
         ctx.fillStyle = gBadgeColor;
-        ctx.fillText(gText, tagX + padX, curY + (badgeH - tagSz * 0.88) * 0.35);
+        drawCondenseText(gText, tagX + padX, curY + (badgeH - tagSz * 0.88) * 0.35, Math.max(4, badgeW - padX * 2));
         tagX += badgeW + tagSz * 0.45;
       }
 
@@ -2082,10 +2330,10 @@ const Render = (() => {
         const dText = item.pubdate;
         const remainW = (txtBox.x + txtBox.w) - tagX;
 
-        if (!isTagWrapped) {
+        if (!isTagWrapped && remainW > 8) {
           const dLine = wrap(ctx, dText, remainW, 1)[0];
           ctx.fillText(dLine, tagX, curY);
-        } else {
+        } else if (isTagWrapped) {
           curY += tagLineH;
           const dLine = wrap(ctx, dText, txtBox.w, 1)[0];
           ctx.fillText(dLine, txtBox.x, curY);
@@ -2094,14 +2342,14 @@ const Render = (() => {
       curY += tagLineH;
     }
 
-    // 6. 描画実行：書名（表示ON時のみ。安全上限ガード付）
+    // 6. 描画実行：書名（表示ON時のみ。先頭1行目は必ず描画する）
     if (showTitle && tLines.length) {
       ctx.font = F(900, tSz, hf);
       ctx.fillStyle = S.cardText || '#2b2330';
       const maxTitleEndY = txtBox.y + availInfoH;
-      for (const ln of tLines) {
-        if (curY + tSz > maxTitleEndY + 2) break;
-        drawCondenseText(ln, txtBox.x, curY, txtBox.w);
+      for (let li = 0; li < tLines.length; li++) {
+        if (li > 0 && curY + tSz > maxTitleEndY + 2) break;
+        drawCondenseText(tLines[li], txtBox.x, curY, txtBox.w);
         curY += tSz * 1.24;
       }
     }
@@ -2200,14 +2448,8 @@ const Render = (() => {
     }
 
     // ラベルバッジ（新刊など）
-    if (lbl && subLbl) {
-      drawLabelBadge(ctx, lbl, labelStyle, cardX, cardY, cardW, cardH, hf, 0);
-      drawLabelBadge(ctx, subLbl, labelStyle, cardX, cardY, cardW, cardH, hf, 1);
-    } else if (lbl) {
-      drawLabelBadge(ctx, lbl, labelStyle, cardX, cardY, cardW, cardH, hf, 0);
-    } else if (subLbl) {
-      drawLabelBadge(ctx, subLbl, labelStyle, cardX, cardY, cardW, cardH, hf, 0);
-    }
+    const labelCfg = { ...L, cardRad: rad };
+    drawPlacedLabels(ctx, lbl, subLbl, labelStyle, cardX, cardY, cardW, cardH, hf, labelCfg);
 
     // プレビュー選択時のハイライト枠
     if (opts && opts.preview && opts.selectedUid && opts.selectedUid === placed.uid) {
@@ -2232,31 +2474,32 @@ const Render = (() => {
     const pad = Math.min(W, H) * 0.01 * num(L.padding, 5.5);
     const gap = Math.min(W, H) * 0.01 * num(L.gap, 1.8);
     const aspect = Number(L.cardAspect) || 1.75;
-    let list = entries(st);
-    if (L.groupMode === 'genre_box' && list.length > 1) {
-      // POPや空白枠の位置は固定し、通常アイテムのみをジャンル順に安定ソート (Ver.0.64)
-      const normalIndices = [];
-      const normalItems = [];
-      list.forEach((entry, idx) => {
+    const list = entries(st);
+    const isGenreBox = L.groupMode === 'genre_box' && list.length > 0;
+
+    // genre_boxモード用：ジャンル単位でグループ化（グループ内の配置順は維持）
+    let genreGroups = [];
+    let extraEntries = [];
+    if (isGenreBox) {
+      const groupMap = new Map();
+      for (const entry of list) {
         if (entry.isSpacer || entry.isPop || !entry.item) {
-          // 固定
+          extraEntries.push(entry);
         } else {
-          normalIndices.push(idx);
-          normalItems.push(entry);
+          const g = entry.item.genre || '';
+          if (!groupMap.has(g)) groupMap.set(g, []);
+          groupMap.get(g).push(entry);
         }
-      });
-      normalItems.sort((a, b) => {
-        const ga = a.item?.genre || '';
-        const gb = b.item?.genre || '';
-        if (ga && !gb) return -1;
-        if (!ga && gb) return 1;
-        if (ga !== gb) return ga.localeCompare(gb, 'ja');
-        return 0;
-      });
-      list = [...list];
-      normalIndices.forEach((idx, i) => {
-        list[idx] = normalItems[i];
-      });
+      }
+      const orderedKeys = [];
+      for (const g of (st.genres || [])) {
+        if (g && groupMap.has(g) && !orderedKeys.includes(g)) orderedKeys.push(g);
+      }
+      for (const g of groupMap.keys()) {
+        if (g && !orderedKeys.includes(g)) orderedKeys.push(g);
+      }
+      if (groupMap.has('')) orderedKeys.push('');
+      genreGroups = orderedKeys.map(g => ({ genreName: g, items: groupMap.get(g) }));
     }
 
     const innerX = pad, innerY = pad;
@@ -2276,11 +2519,12 @@ const Render = (() => {
     }
 
     if (!list.length) {
-      return { cards: [], cellW: innerW, cellH: innerH, cols: 1, rows: 1, header: { rect: headerRect } };
+      return { cards: [], cellW: innerW, cellH: innerH, cols: 1, rows: 1, gap, bandGap: 0, header: { rect: headerRect } };
     }
 
     const gridTop = isBand ? (headerRect.y + headerRect.h + gap) : innerY;
     const gridH = Math.max(80, innerY + innerH - gridTop);
+    const bandGap = isGenreBox ? Math.max(24, Math.min(36, Math.round(Math.min(W, H) * 0.03))) : 0;
 
     // 列数(cols: 1〜12)を総当たりし、全カードが収まり単一セル面積が最大になる分割を採用 (Ver.0.23b)
     let best = null;
@@ -2298,18 +2542,17 @@ const Render = (() => {
       // blockモード時は左上ヘッダーが占めるセルを事前予約
       const testCellW = (innerW - gap * (cols - 1)) / cols;
       const estCellH = testCellW / aspect;
+      let hCols = 0, hRows = 0;
       if (!isBand) {
-        const hCols = Math.min(cols, Math.ceil((headerRect.w + gap * 0.3) / (testCellW + gap)));
-        const hRows = Math.max(1, Math.ceil((headerRect.h + gap * 0.3) / (estCellH + gap)));
-        // 全列がヘッダーで埋まる場合は最低1行下に配置
+        hCols = Math.min(cols, Math.ceil((headerRect.w + gap * 0.3) / (testCellW + gap)));
+        hRows = Math.max(1, Math.ceil((headerRect.h + gap * 0.3) / (estCellH + gap)));
         for (let r = 0; r < hRows; r++) {
           ensureRow(r);
           for (let c = 0; c < hCols; c++) grid[r][c] = true;
         }
       }
 
-      const placements = [];
-      for (const entry of list) {
+      const packOne = (entry, minRow = 0) => {
         const sz = Number(entry.placed.size) || 1;
         let gw = 1, gh = 1;
         if (sz === 5) {
@@ -2325,9 +2568,7 @@ const Render = (() => {
           gw = Math.min(cols, 2);
           gh = 1;
         }
-
-        let placedOk = false;
-        for (let r = 0; !placedOk && r < 200; r++) {
+        for (let r = minRow; r < 400; r++) {
           ensureRow(r + gh - 1);
           for (let c = 0; c <= cols - gw; c++) {
             let free = true;
@@ -2340,17 +2581,78 @@ const Render = (() => {
               for (let dr = 0; dr < gh; dr++) {
                 for (let dc = 0; dc < gw; dc++) grid[r + dr][c + dc] = true;
               }
-              placements.push({ entry, gx: c, gy: r, gw, gh });
-              placedOk = true;
-              break;
+              return { entry, gx: c, gy: r, gw, gh };
             }
           }
         }
+        return null;
+      };
+
+      const placements = [];
+      const bandOffsets = new Map();
+
+      if (isGenreBox) {
+        let nextGroupRow = 0;
+        for (const grp of genreGroups) {
+          let startRow = nextGroupRow;
+          let grpPlacements = [];
+          for (const itemEntry of grp.items) {
+            const p = packOne(itemEntry, startRow);
+            if (p) grpPlacements.push(p);
+          }
+          // blockモード時、ヘッダー右側から下段左側へ跨いでヘッダーに重なる場合はヘッダー下から開始
+          if (!isBand && startRow < hRows && grpPlacements.length > 0) {
+            const hasAbove = grpPlacements.some(p => p.gy < hRows);
+            const hasLeftBelow = grpPlacements.some(p => p.gy + p.gh > hRows && p.gx < hCols);
+            if (hasAbove && hasLeftBelow) {
+              for (const p of grpPlacements) {
+                for (let dr = 0; dr < p.gh; dr++) {
+                  for (let dc = 0; dc < p.gw; dc++) grid[p.gy + dr][p.gx + dc] = false;
+                }
+              }
+              startRow = hRows;
+              grpPlacements = [];
+              for (const itemEntry of grp.items) {
+                const p = packOne(itemEntry, startRow);
+                if (p) grpPlacements.push(p);
+              }
+            }
+          }
+          if (grpPlacements.length > 0) {
+            let minGy = Infinity, maxGy = -1;
+            for (const p of grpPlacements) {
+              minGy = Math.min(minGy, p.gy);
+              maxGy = Math.max(maxGy, p.gy + p.gh - 1);
+              placements.push(p);
+            }
+            const extraTop = (minGy === 0 && !isBand)
+              ? Math.max(0, bandGap * 0.65 - pad * 0.4)
+              : Math.max(0, bandGap - gap);
+            if (extraTop > 0) {
+              bandOffsets.set(minGy, (bandOffsets.get(minGy) || 0) + extraTop);
+            }
+            nextGroupRow = maxGy + 1;
+          }
+        }
+        // POP・空白枠はジャンル枠内に混入させないようグループ枠外の後続行へ配置
+        for (const ex of extraEntries) {
+          const p = packOne(ex, nextGroupRow);
+          if (p) placements.push(p);
+        }
+      } else {
+        for (const entry of list) {
+          const p = packOne(entry, 0);
+          if (p) placements.push(p);
+        }
       }
+
+      let totalExtraY = 0;
+      for (const v of bandOffsets.values()) totalExtraY += v;
 
       const rows = Math.max(1, grid.length);
       const maxCellW = Math.max(4, (innerW - gap * (cols - 1)) / cols);
-      const maxCellH = Math.max(4, (gridH - gap * (rows - 1)) / rows);
+      const effectiveGridH = Math.max(40, gridH - totalExtraY);
+      const maxCellH = Math.max(4, (effectiveGridH - gap * (rows - 1)) / rows);
       if (maxCellW <= 0 || maxCellH <= 0) continue;
 
       // 実際のセル縦横比と目標比率(aspect)からの乖離度に基づく厳格な評価 (Ver.0.23b)
@@ -2364,7 +2666,7 @@ const Render = (() => {
       const score = effW * effH * ratioFit;
 
       if (!best || score > best.score) {
-        best = { cols, rows, cellW: maxCellW, cellH: maxCellH, score, placements };
+        best = { cols, rows, cellW: maxCellW, cellH: maxCellH, score, placements, bandOffsets };
       }
     }
 
@@ -2381,10 +2683,16 @@ const Render = (() => {
         gh: 1,
       }));
       const fallbackRows = Math.max(1, Math.ceil(list.length / fallbackCols));
-      best = { cols: fallbackCols, rows: fallbackRows, cellW: fbCellW, cellH: fbCellH, score: 0, placements: fallbackPlacements };
+      best = { cols: fallbackCols, rows: fallbackRows, cellW: fbCellW, cellH: fbCellH, score: 0, placements: fallbackPlacements, bandOffsets: new Map() };
     }
 
-    const { cols, rows, cellW, cellH, placements } = best;
+    const { cols, rows, cellW, cellH, placements, bandOffsets } = best;
+    const rowYOffset = new Array(rows + 1).fill(0);
+    let accOffset = 0;
+    for (let r = 0; r <= rows; r++) {
+      accOffset += (bandOffsets && bandOffsets.get(r)) || 0;
+      rowYOffset[r] = accOffset;
+    }
 
     // blockモード時、ヘッダー矩形を予約されたグリッド領域に合わせて綺麗に整列
     if (!isBand) {
@@ -2395,7 +2703,7 @@ const Render = (() => {
         x: innerX,
         y: innerY,
         w: hCols * cellW + (hCols - 1) * gap,
-        h: Math.min(innerH * 0.42, hRows * cellH + (hRows - 1) * gap),
+        h: Math.min(innerH * 0.42, hRows * cellH + (hRows - 1) * gap + (rowYOffset[hRows - 1] || 0)),
       };
     }
 
@@ -2412,12 +2720,12 @@ const Render = (() => {
       gw: p.gw,
       gh: p.gh,
       x: innerX + p.gx * (cellW + gap),
-      y: gridTop + p.gy * (cellH + gap),
+      y: gridTop + p.gy * (cellH + gap) + (rowYOffset[p.gy] || 0),
       w: p.gw * cellW + (p.gw - 1) * gap,
       h: p.gh * cellH + (p.gh - 1) * gap,
     }));
 
-    return { cards, cellW, cellH, cols, rows, header: { rect: headerRect } };
+    return { cards, cellW, cellH, cols, rows, gap, bandGap, header: { rect: headerRect } };
   }
 
   /** ジャンル別グループ枠＆見出し帯の描画 (Ver.0.15) */
@@ -2447,8 +2755,9 @@ const Render = (() => {
         maxY = Math.max(maxY, c.y + c.h);
       }
 
-      const padX = Math.max(6, lay.cellW * 0.035);
-      const padY = Math.max(6, lay.cellH * 0.035);
+      const maxPad = lay.gap ? Math.max(4, lay.gap * 0.42) : 12;
+      const padX = Math.min(maxPad, Math.max(4, lay.cellW * 0.035));
+      const padY = Math.min(maxPad, Math.max(4, lay.cellH * 0.035));
       const bx = minX - padX;
       const by = minY - padY;
       const bw = (maxX - minX) + padX * 2;
@@ -2468,12 +2777,12 @@ const Render = (() => {
       ctx.setLineDash([]);
 
       // 見出し帯プレート（左上）
-      const titleH = Math.max(22, Math.min(36, lay.cellH * 0.16));
+      const titleH = Math.max(20, Math.min(32, lay.bandGap ? lay.bandGap * 0.72 : lay.cellH * 0.16));
       const fontSz = titleH * 0.58;
       ctx.font = F(900, fontSz, bf);
       const textW = ctx.measureText(genreName).width;
-      const plateW = textW + titleH * 1.2;
-      const plateX = bx + 10;
+      const plateW = Math.min(Math.max(36, bw - 16), textW + titleH * 1.2);
+      const plateX = bx + Math.min(10, Math.max(4, bw * 0.04));
       const plateY = by - titleH * 0.5;
 
       ctx.fillStyle = gColor;
@@ -2487,7 +2796,16 @@ const Render = (() => {
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(genreName, plateX + plateW / 2, plateY + titleH / 2);
+      const maxPlateTextW = Math.max(12, plateW - titleH * 0.5);
+      if (textW > maxPlateTextW && textW > 0) {
+        ctx.save();
+        ctx.translate(plateX + plateW / 2, plateY + titleH / 2);
+        ctx.scale(maxPlateTextW / textW, 1);
+        ctx.fillText(genreName, 0, 0);
+        ctx.restore();
+      } else {
+        ctx.fillText(genreName, plateX + plateW / 2, plateY + titleH / 2);
+      }
 
       ctx.restore();
     }
@@ -2545,7 +2863,7 @@ const Render = (() => {
   }
 
   return {
-    rr, hexA, F, wrap, fitSize, drawContain, drawCover, fmtPrice,
+    rr, hexA, F, formatFontFamily, wrap, fitSize, drawContain, drawCover, fmtPrice,
     entries, resolveLabel, resolveSubLabel, draw, drawPopCard, getGenreColor, GENRE_PALETTE, GENRE_PALETTES,
     SUB_LABELS,
   };

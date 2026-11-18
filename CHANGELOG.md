@@ -4,6 +4,41 @@
 
 ---
 
+- **Ver.1.02** (2026-11-18):
+  - **1. お品書き描画・レイアウトエンジンの不具合修正 (`js/render.js`, `js/app.js`)**:
+    - `Render.drawHeader` でイベント名やスペース番号が未入力の際にプレースホルダー文言を描画しないよう修正。
+    - `Render.drawLabelBadge` のリボン・角丸矩形・タグ形状における幅上限ガードと、`Render.drawCard` の `genre_tab`・`tr` 位置 2 連ラベル干渉回避・長体ジャンルバッジ・狭幅カードでの書名領域優先確保を修正。
+    - ジャンル枠表示（`genre_box`）時に `computeLayout` と `drawGenreBoxes` でジャンル別バンド配置を行い、ヘッダー／他ジャンル枠／POP との重なりや `state.placed` の並び順崩れを解消。
+    - Canvas 上の `mousemove` ドラッグ並び替えを同期更新＋直前入替対象 `lastSwappedTargetUid` の追跡に変更し、`mouseup` 時に保存することで並び替えの振動・ちらつきを解消。
+  - **2. POP作成・編集機能の修正 (`js/render.js`, `js/app.js`)**:
+    - `Render.drawPopCard` で吹き出し外枠（`style === 'speech'`）有効時に内部 `round` の二重吹き出し・しっぽ描画を抑止し、補足文（`sub`）の `textColor` 反映と長体フィットを修正。
+    - `#canvasWrap` へのアイテム／POP ドロップ時の重複追加をガードし、POP スタイルを白地／黒地シンプルから別スタイルへ戻す際に元の配色が復元・維持されるよう修正。
+  - **3. 簡易お品書き・当日頒布物帳票の出力修正 (`js/outputs.js`, `js/app.js`)**:
+    - `Outputs.renderMini` で発行年月未設定時のダミー文字列出力を撤廃し、`openMiniPreview` の印刷 HTML から余分な Flex 配置と末尾の不要な改ページを除去。
+    - `Outputs.stockSheetHtml` の列幅をパーセンテージ指定に統一し、`body` 幅を A4 印刷幅基準へ合わせた上で `fitSheetToOnePage` の縮小下限を `0.40` まで緩和。
+    - `openSheetPreview` の HTML ダウンロードにおいてサークル名のファイル名サニタイズ、日付プレフィックス付与（`getTodayPrefix()`）、生成 Blob URL の解放（`revokeObjectURL`）を実施。
+  - **4. データ管理・CSV・Undo・画像キャッシュの修正 (`js/storage.js`, `js/app.js`)**:
+    - `Images.getUsedIds` および CSV／デザインCSV／フォルダ出力・状態同期で `state.bg.type === 'image'` 時のみ `state.bg.imageId` を参照するよう統一し、`#bType` 切替時に非画像タイプへ移る際は `imageId` をクリア。
+    - Undo/Redo にカスタムフォント履歴（`undoFontStack` / `redoFontStack` / `fontArchive`）を組み込み、カスタムフォントを含む編集の巻き戻し・やり直しに対応。
+    - CSV・デザインCSV 読込時およびリロード時に空配列 `genres: []` や `genreColors` が既定値で上書き・汚染されないよう保護し、`#fileCsv` 読込に `try/catch` と検証を追加。
+  - **5. UI・フォーム・レスポンシブ・PCフォントモーダルの修正 (`index.html`, `css/style.css`, `js/render.js`, `js/app.js`)**:
+    - 複数画像の一括登録時に未入力項目のダミー初期値（`'202X年X月'`・`'A5 / 36P'`・`500`）を混入させず空文字とし、登録モーダル開放中の一括登録後はモーダルを閉じるよう修正。
+    - PCフォントモーダル（`initPcFontModal`）で汎用ファミリを除くトークン正規化により `queryLocalFonts` 実行時の重複候補を排除し、プレビュー表示に `Render.formatFontFamily` を適用。
+    - 開催日欄（`#mDate` / `#mDate2`）の `readonly` を解除して手入力可能とし、カレンダーボタン上の `<input type="date">` へピッカーを分離・双方向同期（`parseJaDateToIso`）。
+    - `#lHeaderLayout` の `space_focus` 選択時に開催場所・開催時間の表示チェックを強制オフにしないよう変更し、`onCustomSizeChange` および背景枠色（`borderColor`）の状態同期を修正。
+    - 900px 以下のレスポンシブ表示で `.resizer-h` 非表示とペイン高さ調整を行い、UI カスタムカラー設定で背景明暗に応じた枠線・ホバー色・テキスト補助色などの派生 CSS 変数も一括更新・解除するよう対応。
+
+- **Ver.1.01b** (2026-11-18):
+  - **ハート型ラベル文字位置の微調整 (`js/render.js`)**:
+    - `Render.drawLabelBadge` の `heart` 描画において、文字の縦方向オフセット（`-r * 0.10` → `-r * 0.02`）とフィットサイズを微調整し、ハート上部くぼみへの文字重なりを解消。
+
+- **Ver.1.01** (2026-11-18):
+  - **新ラベル形状3種の追加 (`index.html`, `js/render.js`)**:
+    - `#lLabelStyle` および `Render.drawLabelBadge` に「ハート型（`heart`）」「コーナー斜め帯（`corner_band`）」「スタンプ・検印風（`stamp`）」の3種類のラベル形状を追加。
+  - **ラベル形状のカスタマイズ機能（パラメータ開放）を追加 (`index.html`, `js/app.js`, `js/render.js`)**:
+    - ラベルカラー設定の下に折りたたみセクション「⚙️ ラベル形状のカスタマイズ（`#detailsLabelCustomize`）」を新設。
+    - 既存5種・新規3種の全ラベル形状に対して、配置位置（標準／左上／右上／左下／右下）・サイズ倍率・文字サイズ倍率・傾き角度・白フチ枠線の有無・枠線の太さ・ドロップシャドウの有無を自在に調整可能とし、個別リセットボタン（`#btnResetLabelCustomize`）およびCSV保存／読込への自動連携を実装。
+
 - **Ver.1.00** (2026-11-16):
   - **メジャーリリース（GitHub / BOOTH 正式公開版）**:
     - Web上への広く一般公開（GitHubリポジトリおよびBOOTH頒布）に伴い、バージョンを正式版 `Ver.1.00` に策定。

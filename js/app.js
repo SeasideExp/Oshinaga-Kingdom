@@ -207,7 +207,7 @@
     version: 1,
     meta: { eventName: 'なんちゃらマーケットXXX', place: '帝都国際見本市会場', time: '10:30〜16:00', date: '202X年X月XX日(日)', space: '東A-99a', circle: 'サンプルサークル', twoDays: false, date2: '202X年X月XX日(日)', space2: '東C-99b' },
     canvas: { preset: 'x169', width: 1920, height: 1080 },
-    layout: { headerMode: 'block', headerLayout: 'space_focus', headerSpaceWidth: 36, headerSpaceScale: 100, showHeaderSpaceBg: false, showHeaderSpaceBorder: false, showHeaderPlace: false, showHeaderTime: false, showHeaderEventBg: true, headerWidth: 40, headerScale: 100, headerEffect: 'shadow', headerPanel: true, headerRadius: 1.5, cardAspect: 1.75, gap: 1.8, padding: 5.5, textScale: 100, priceScale: 100, titleScale: 100, priceTextScale: 100, metaScale: 100, specScale: 100, groupMode: 'free', showTitle: true, titleFit: 'condense1', showGenre: false, showDate: true, showSpec: false, priceStyle: 'text', labelStyle: 'star' },
+    layout: { headerMode: 'block', headerLayout: 'space_focus', headerSpaceWidth: 36, headerSpaceScale: 100, showHeaderSpaceBg: false, showHeaderSpaceBorder: false, showHeaderPlace: false, showHeaderTime: false, showHeaderEventBg: true, headerWidth: 40, headerScale: 100, headerEffect: 'shadow', headerPanel: true, headerRadius: 1.5, cardAspect: 1.75, gap: 1.8, padding: 5.5, textScale: 100, priceScale: 100, titleScale: 100, priceTextScale: 100, metaScale: 100, specScale: 100, groupMode: 'free', showTitle: true, titleFit: 'condense1', showGenre: false, showDate: true, showSpec: false, priceStyle: 'text', labelStyle: 'star', labelPosition: 'auto', labelScale: 100, labelTextScale: 100, labelAngle: 0, labelBorder: 'auto', labelBorderWidth: 100, labelShadow: true },
     bg: { type: 'gradient', color1: '#0f2742', color2: '#2c6a8f', angle: 120, imageId: '', imageFit: 'cover', imageOpacity: 1, imageBlur: 0, imageScale: 100, imageX: 0, imageY: 0, pattern: 'grid', patternColor: '#ffffff', patternOpacity: 0.08, patternSize: 3, overlayColor: '#ffffff', overlayOpacity: 0, border: 0, borderColor: '#00b7ee' },
     style: { colorMode: 'classic', theme: 'cool', headingFont: FONTS[0][0], bodyFont: FONTS[0][0], accent: '#00b7ee', headerText: '#ffffff', headerOutline: '#0f2742', headerPanelColor: '#0f2742', headerPanelOpacity: 0.88, cardBg: '#ffffff', cardOpacity: 0.95, cardText: '#14213d', priceColor: '#0068b7', radius: 1.5, shadow: true, cardBorder: true },
     output: { pngMode: 'sns', pngSize: '2048', pngPrintSize: 'A4_300dpi', miniSort: 'placed', miniSize: 'A6', miniOrient: 'portrait', miniPages: 'auto', miniUnit: 500, miniEmphasis: 'invert', miniShowName: true, miniShowLabel: true, miniShowSpec: false, sheetFitOnePage: true, sheetExtraRows: 2, sheetOrient: 'portrait', sheetShowSpec: false },
@@ -660,10 +660,45 @@
   /* ---------- 状態永続化（IndexedDB）＆ Undo / Redo 履歴管理 (Ver.0.55) ---------- */
   const undoStack = [];
   const redoStack = [];
+  const undoFontStack = [];
+  const redoFontStack = [];
+  const fontArchive = new Map();
   const MAX_HISTORY = 50;
   let lastSavedStateJson = null;
+  let lastSavedFontIds = null;
   let debounceTimer = null;
   let debounceBaseJson = null;
+  let debounceBaseFontIds = null;
+
+  function getCurrentCustomFontIds() {
+    if (!window.CustomFonts || !CustomFonts.data) return [];
+    return [...CustomFonts.data.keys()];
+  }
+
+  function archiveCustomFonts() {
+    if (!window.CustomFonts || !CustomFonts.data) return;
+    for (const [id, meta] of CustomFonts.data.entries()) {
+      if (meta && !fontArchive.has(id)) {
+        fontArchive.set(id, structuredClone(meta));
+      }
+    }
+  }
+
+  async function syncCustomFontsToIds(targetIds) {
+    if (!window.CustomFonts || !Array.isArray(targetIds)) return;
+    archiveCustomFonts();
+    const targetSet = new Set(targetIds);
+    for (const id of [...CustomFonts.data.keys()]) {
+      if (!targetSet.has(id)) {
+        await CustomFonts.del(id);
+      }
+    }
+    for (const id of targetIds) {
+      if (!CustomFonts.data.has(id) && fontArchive.has(id)) {
+        await CustomFonts.putMeta(structuredClone(fontArchive.get(id)));
+      }
+    }
+  }
 
   function updateUndoRedoButtons() {
     const btnUndo = $('#btnUndo');
@@ -679,42 +714,67 @@
     }
     if (debounceBaseJson !== null) {
       undoStack.push(debounceBaseJson);
-      if (undoStack.length > MAX_HISTORY) undoStack.shift();
+      undoFontStack.push(debounceBaseFontIds || []);
+      if (undoStack.length > MAX_HISTORY) {
+        undoStack.shift();
+        undoFontStack.shift();
+      }
       redoStack.length = 0;
+      redoFontStack.length = 0;
       debounceBaseJson = null;
+      debounceBaseFontIds = null;
       lastSavedStateJson = JSON.stringify(state);
+      lastSavedFontIds = getCurrentCustomFontIds();
       updateUndoRedoButtons();
     }
   }
 
   function pushStateHistory(immediate = false) {
+    archiveCustomFonts();
     const currentJson = JSON.stringify(state);
+    const currentFontIds = getCurrentCustomFontIds();
+    const currentFontKey = JSON.stringify(currentFontIds);
     if (lastSavedStateJson === null) {
       lastSavedStateJson = currentJson;
+      lastSavedFontIds = currentFontIds;
       return;
     }
-    if (currentJson === lastSavedStateJson) return;
+    if (currentJson === lastSavedStateJson && currentFontKey === JSON.stringify(lastSavedFontIds || [])) return;
 
     if (immediate) {
       flushDebounceHistory();
       undoStack.push(lastSavedStateJson);
-      if (undoStack.length > MAX_HISTORY) undoStack.shift();
+      undoFontStack.push(lastSavedFontIds || []);
+      if (undoStack.length > MAX_HISTORY) {
+        undoStack.shift();
+        undoFontStack.shift();
+      }
       redoStack.length = 0;
+      redoFontStack.length = 0;
       lastSavedStateJson = currentJson;
+      lastSavedFontIds = currentFontIds;
       updateUndoRedoButtons();
     } else {
       if (debounceBaseJson === null) {
         debounceBaseJson = lastSavedStateJson;
+        debounceBaseFontIds = lastSavedFontIds || [];
       }
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         debounceTimer = null;
         if (debounceBaseJson !== null) {
           undoStack.push(debounceBaseJson);
-          if (undoStack.length > MAX_HISTORY) undoStack.shift();
+          undoFontStack.push(debounceBaseFontIds || []);
+          if (undoStack.length > MAX_HISTORY) {
+            undoStack.shift();
+            undoFontStack.shift();
+          }
           redoStack.length = 0;
+          redoFontStack.length = 0;
           debounceBaseJson = null;
+          debounceBaseFontIds = null;
           lastSavedStateJson = JSON.stringify(state);
+          lastSavedFontIds = getCurrentCustomFontIds();
           updateUndoRedoButtons();
         }
       }, 250);
@@ -732,16 +792,24 @@
     flushDebounceHistory();
     if (undoStack.length === 0) return;
     const currentJson = JSON.stringify(state);
+    const currentFontIds = getCurrentCustomFontIds();
     const prevJson = undoStack.pop();
+    const prevFontIds = undoFontStack.pop() || [];
     redoStack.push(currentJson);
-    if (redoStack.length > MAX_HISTORY) redoStack.shift();
+    redoFontStack.push(currentFontIds);
+    if (redoStack.length > MAX_HISTORY) {
+      redoStack.shift();
+      redoFontStack.shift();
+    }
 
     try {
+      await syncCustomFontsToIds(prevFontIds);
       const restored = JSON.parse(prevJson);
       Object.keys(state).forEach(k => delete state[k]);
       Object.assign(state, restored);
       if (typeof window !== 'undefined') window.state = state;
       lastSavedStateJson = JSON.stringify(state);
+      lastSavedFontIds = getCurrentCustomFontIds();
 
       if (selectedPlacedUid && !state.placed.some(p => p.uid === selectedPlacedUid)) {
         selectedPlacedUid = state.placed[0]?.uid || null;
@@ -751,9 +819,11 @@
       syncFormFromState();
       renderGenreOptions();
       renderLabelColorSettings();
+      renderCustomFontList();
       renderLibrary();
       renderPopLibrary();
       renderPlacedBar();
+      updateImageCacheSummary();
       redraw();
       await saveState(true);
       updateUndoRedoButtons();
@@ -767,16 +837,24 @@
     flushDebounceHistory();
     if (redoStack.length === 0) return;
     const currentJson = JSON.stringify(state);
+    const currentFontIds = getCurrentCustomFontIds();
     const nextJson = redoStack.pop();
+    const nextFontIds = redoFontStack.pop() || [];
     undoStack.push(currentJson);
-    if (undoStack.length > MAX_HISTORY) undoStack.shift();
+    undoFontStack.push(currentFontIds);
+    if (undoStack.length > MAX_HISTORY) {
+      undoStack.shift();
+      undoFontStack.shift();
+    }
 
     try {
+      await syncCustomFontsToIds(nextFontIds);
       const restored = JSON.parse(nextJson);
       Object.keys(state).forEach(k => delete state[k]);
       Object.assign(state, restored);
       if (typeof window !== 'undefined') window.state = state;
       lastSavedStateJson = JSON.stringify(state);
+      lastSavedFontIds = getCurrentCustomFontIds();
 
       if (selectedPlacedUid && !state.placed.some(p => p.uid === selectedPlacedUid)) {
         selectedPlacedUid = state.placed[0]?.uid || null;
@@ -786,9 +864,11 @@
       syncFormFromState();
       renderGenreOptions();
       renderLabelColorSettings();
+      renderCustomFontList();
       renderLibrary();
       renderPopLibrary();
       renderPlacedBar();
+      updateImageCacheSummary();
       redraw();
       await saveState(true);
       updateUndoRedoButtons();
@@ -958,10 +1038,11 @@
           }
         }
 
+        archiveCustomFonts();
         await CustomFonts.del(id);
         renderFontSelectOptions();
         renderCustomFontList();
-        await saveState();
+        await saveState(false, true);
         redraw();
         toast(`フォント「${name}」を削除しました`, 'success');
       });
@@ -989,7 +1070,8 @@
     if (addedCount > 0) {
       renderFontSelectOptions();
       renderCustomFontList();
-      await saveState();
+      archiveCustomFonts();
+      await saveState(false, true);
       redraw();
       toast(`${addedCount} 件のフォントを追加しました！`, 'success');
     }
@@ -1054,14 +1136,28 @@
     // フォント候補マップ: key (小文字化family) -> { name, family, isPicked, source }
     const fontCandidateMap = new Map();
     let hasAutoScanned = false;
+    const GENERIC_FONT_TOKENS = new Set(['sans-serif', 'serif', 'monospace', 'cursive', 'fantasy', 'system-ui', 'ui-sans-serif', 'ui-serif', 'ui-monospace', 'ui-rounded']);
+    const normalizeFontKey = str => String(str || '').toLowerCase().replace(/['"]/g, '').trim();
+    const extractFontTokens = famStr => String(famStr || '').split(',').map(normalizeFontKey).filter(t => t && !GENERIC_FONT_TOKENS.has(t));
+    const hasFontCandidate = famStr => {
+      const key = normalizeFontKey(famStr);
+      if (fontCandidateMap.has(key)) return true;
+      const tokens = extractFontTokens(famStr);
+      if (!tokens.length) return false;
+      for (const candidate of fontCandidateMap.values()) {
+        const candTokens = extractFontTokens(candidate.family);
+        if (tokens.some(t => candTokens.includes(t))) return true;
+      }
+      return false;
+    };
 
     // ピックアップ状態を同期
     function syncPickedState() {
       const pickedList = getPickedPcFonts();
-      const pickedFamilySet = new Set(pickedList.map(p => p.family.toLowerCase().replace(/['"]/g, '').trim()));
+      const pickedFamilySet = new Set(pickedList.map(p => normalizeFontKey(p.family)));
 
       for (const item of fontCandidateMap.values()) {
-        const itemFam = item.family.toLowerCase().replace(/['"]/g, '').trim();
+        const itemFam = normalizeFontKey(item.family);
         item.isPicked = pickedFamilySet.has(itemFam);
       }
 
@@ -1112,7 +1208,7 @@
           const isAvail = isLocalFontAvailable(item.family);
           if (isAvail) {
             foundCount++;
-            const key = item.family.toLowerCase().replace(/['"]/g, '').trim();
+            const key = normalizeFontKey(item.family);
             if (!fontCandidateMap.has(key)) {
               fontCandidateMap.set(key, {
                 name: item.name,
@@ -1148,8 +1244,8 @@
         for (const f of localFonts) {
           const family = f.family || f.fullName;
           const name = f.fullName || f.family;
-          const key = family.toLowerCase().replace(/['"]/g, '').trim();
-          if (!fontCandidateMap.has(key)) {
+          const key = normalizeFontKey(family);
+          if (!hasFontCandidate(family)) {
             fontCandidateMap.set(key, {
               name,
               family,
@@ -1223,7 +1319,7 @@
                 <div style="font-size:10.5px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(it.family)}</div>
               </div>
             </label>
-            <div style="font-family:${esc(it.family)}, sans-serif;font-size:13.5px;color:var(--text);white-space:nowrap;background:rgba(0,0,0,0.15);padding:4px 10px;border-radius:4px;border:1px solid var(--border);min-width:140px;text-align:center;">
+            <div style="font-family:${esc(Render.formatFontFamily(it.family))}, sans-serif;font-size:13.5px;color:var(--text);white-space:nowrap;background:rgba(0,0,0,0.15);padding:4px 10px;border-radius:4px;border:1px solid var(--border);min-width:140px;text-align:center;">
               お品書き 新刊 1,000円
             </div>
           </div>
@@ -1370,16 +1466,18 @@
     $('#selThemeQuick').value = S.theme || 'cool';
 
     // Meta
-    $('#mCircle').value = M.circle || '';
-    $('#mEventName').value = M.eventName || '';
-    $('#mPlace').value = M.place || '';
-    $('#mTime').value = M.time || '';
-    $('#mDate').value = M.date || '';
-    $('#mSpace').value = M.space || '';
+    if ($('#mCircle').value !== (M.circle || '')) $('#mCircle').value = M.circle || '';
+    if ($('#mEventName').value !== (M.eventName || '')) $('#mEventName').value = M.eventName || '';
+    if ($('#mPlace').value !== (M.place || '')) $('#mPlace').value = M.place || '';
+    if ($('#mTime').value !== (M.time || '')) $('#mTime').value = M.time || '';
+    if ($('#mDate').value !== (M.date || '')) $('#mDate').value = M.date || '';
+    if ($('#mDatePick')) $('#mDatePick').value = parseJaDateToIso(M.date);
+    if ($('#mSpace').value !== (M.space || '')) $('#mSpace').value = M.space || '';
     $('#mTwoDays').checked = !!M.twoDays;
     $('#twoDaysBox').style.display = M.twoDays ? 'flex' : 'none';
-    $('#mDate2').value = M.date2 || '';
-    $('#mSpace2').value = M.space2 || '';
+    if ($('#mDate2').value !== (M.date2 || '')) $('#mDate2').value = M.date2 || '';
+    if ($('#mDate2Pick')) $('#mDate2Pick').value = parseJaDateToIso(M.date2);
+    if ($('#mSpace2').value !== (M.space2 || '')) $('#mSpace2').value = M.space2 || '';
 
     // Layout & Header
     $('#lHeaderMode').value = L.headerMode || 'block';
@@ -1446,6 +1544,29 @@
     $('#lTitleFit').value = L.titleFit || 'condense1';
     $('#lPriceStyle').value = L.priceStyle || 'text';
     $('#lLabelStyle').value = L.labelStyle || 'star';
+    if ($('#lLabelPosition')) $('#lLabelPosition').value = L.labelPosition || 'auto';
+    if ($('#lLabelScale')) {
+      const lsc = L.labelScale ?? 100;
+      $('#lLabelScale').value = lsc;
+      if ($('#valLabelScale')) $('#valLabelScale').textContent = lsc + '%';
+    }
+    if ($('#lLabelTextScale')) {
+      const ltsc = L.labelTextScale ?? 100;
+      $('#lLabelTextScale').value = ltsc;
+      if ($('#valLabelTextScale')) $('#valLabelTextScale').textContent = ltsc + '%';
+    }
+    if ($('#lLabelAngle')) {
+      const lang = L.labelAngle ?? 0;
+      $('#lLabelAngle').value = lang;
+      if ($('#valLabelAngle')) $('#valLabelAngle').textContent = (lang > 0 ? '+' : '') + lang + '°';
+    }
+    if ($('#lLabelBorder')) $('#lLabelBorder').value = L.labelBorder || 'auto';
+    if ($('#lLabelBorderWidth')) {
+      const lbw = L.labelBorderWidth ?? 100;
+      $('#lLabelBorderWidth').value = lbw;
+      if ($('#valLabelBorderWidth')) $('#valLabelBorderWidth').textContent = lbw + '%';
+    }
+    if ($('#lLabelShadow')) $('#lLabelShadow').checked = L.labelShadow !== false;
     $('#lShowTitle').checked = L.showTitle !== false;
     $('#lShowGenre').checked = !!L.showGenre;
     $('#lShowDate').checked = L.showDate !== false;
@@ -1481,7 +1602,7 @@
 
     // Background
     $('#bType').value = B.type || 'gradient';
-    const hasBgImg = !!B.imageId;
+    const hasBgImg = B.type === 'image' && !!B.imageId;
     if ($('#bgImageControls')) $('#bgImageControls').style.display = (B.type === 'image') ? 'flex' : 'none';
     if ($('#bgImgEmptyState') && $('#bgImgActiveState')) {
       if (hasBgImg) {
@@ -1848,9 +1969,9 @@
       // 複数ファイル一括登録（モーダル外へのD&D時は即座にお品書きへ配置）
       const selectedGenre = isModalOpen ? ($('#fGenre')?.value || '') : '';
       const autoPlace = isModalOpen ? ($('#fAutoPlace')?.checked !== false) : true;
-      const bulkDate = isModalOpen ? ($('#fDate')?.value.trim() || '202X年X月') : '202X年X月';
-      const bulkSpec = isModalOpen ? ($('#fSpec')?.value.trim() || 'A5 / 36P') : 'A5 / 36P';
-      const bulkPrice = (isModalOpen && $('#fPrice')?.value !== '') ? Number($('#fPrice').value) : 500;
+      const bulkDate = isModalOpen ? ($('#fDate')?.value.trim() || '') : '';
+      const bulkSpec = isModalOpen ? ($('#fSpec')?.value.trim() || '') : '';
+      const bulkPrice = (isModalOpen && $('#fPrice')?.value !== '') ? Number($('#fPrice').value) : '';
       for (const f of imgFiles) {
         const dataUrl = await Images.resizeFile(f, 900);
         const imgId = await Images.put(dataUrl);
@@ -1874,6 +1995,7 @@
       renderPlacedBar();
       updateImageCacheSummary();
       redraw();
+      if (isModalOpen) closeItemModal();
       toast(autoPlace ? `${imgFiles.length}件のアイテムを一括登録＆配置しました` : `${imgFiles.length}件のアイテムを一括登録（未配置）しました`);
     }
   }
@@ -2405,6 +2527,7 @@
   }
 
   let canvasDragMoved = false;
+  let lastSwappedTargetUid = null;
 
   canvasEl.addEventListener('mousedown', e => {
     const pt = canvasPoint(e);
@@ -2413,6 +2536,7 @@
       selectedPlacedUid = hit.uid;
       dragPlacedUid = hit.uid;
       canvasDragMoved = false;
+      lastSwappedTargetUid = null;
       renderPlacedBar();
       redraw();
     } else {
@@ -2422,21 +2546,27 @@
     }
   });
 
-  canvasEl.addEventListener('mousemove', async e => {
+  canvasEl.addEventListener('mousemove', e => {
     if (!dragPlacedUid) return;
     const pt = canvasPoint(e);
     const over = hitCard(pt);
-    if (over && over.uid !== dragPlacedUid) {
-      const idxA = state.placed.findIndex(p => p.uid === dragPlacedUid);
-      const idxB = state.placed.findIndex(p => p.uid === over.uid);
-      if (idxA >= 0 && idxB >= 0) {
-        const [moved] = state.placed.splice(idxA, 1);
-        state.placed.splice(idxB, 0, moved);
-        canvasDragMoved = true;
-        await saveState(true);
-        renderPlacedBar();
-        redraw();
+    if (!over || over.uid === dragPlacedUid) {
+      if (!over || over.uid !== lastSwappedTargetUid) {
+        lastSwappedTargetUid = null;
       }
+      return;
+    }
+    if (over.uid === lastSwappedTargetUid) return;
+
+    const idxA = state.placed.findIndex(p => p.uid === dragPlacedUid);
+    const idxB = state.placed.findIndex(p => p.uid === over.uid);
+    if (idxA >= 0 && idxB >= 0) {
+      const [moved] = state.placed.splice(idxA, 1);
+      state.placed.splice(idxB, 0, moved);
+      canvasDragMoved = true;
+      lastSwappedTargetUid = over.uid;
+      renderPlacedBar();
+      redraw();
     }
   });
   window.addEventListener('mouseup', async () => {
@@ -2446,6 +2576,7 @@
       }
       dragPlacedUid = null;
       canvasDragMoved = false;
+      lastSwappedTargetUid = null;
     }
   });
 
@@ -2464,6 +2595,14 @@
       const item = state.items.find(x => x.id === itemId);
       const pop = (state.pops || []).find(x => x.id === itemId);
       if (item) {
+        const existing = state.placed.find(p => p.itemId === item.id);
+        if (existing) {
+          selectedPlacedUid = existing.uid;
+          renderPlacedBar();
+          redraw();
+          toast(`「${item.name}」は既に配置されています`, 'warn');
+          return;
+        }
         const pUid = 'p_' + uid();
         state.placed.push({ uid: pUid, itemId: item.id, size: 1, label: 'none', labelText: '', labelColor: '' });
         selectedPlacedUid = pUid;
@@ -2473,6 +2612,14 @@
         redraw();
         toast(`「${item.name}」をドロップ配置しました`);
       } else if (pop) {
+        const existing = state.placed.find(p => p.itemId === pop.id);
+        if (existing) {
+          selectedPlacedUid = existing.uid;
+          renderPlacedBar();
+          redraw();
+          toast(`POP「${pop.title || '（画像POP）'}」は既に配置されています`, 'warn');
+          return;
+        }
         const pUid = 'p_' + uid();
         state.placed.push({ uid: pUid, itemId: pop.id, size: 2, label: 'none', labelText: '', labelColor: '' });
         selectedPlacedUid = pUid;
@@ -3094,16 +3241,42 @@
   }
 
   function initPopHandlers() {
+    let lastColoredPopBg = '';
+    let lastColoredPopText = '';
+
     $('#popStyleInput')?.addEventListener('change', e => {
       const val = e.target.value;
+      const bgInp = $('#popBgColorInput');
+      const txtInp = $('#popTextColorInput');
+      const defPopBg = state.style?.accent || (getActiveColorMode() === 'classic' ? '#e4007f' : '#ff4b00');
+      const curBg = (bgInp?.value || '').toLowerCase();
+      const curTxt = (txtInp?.value || '').toLowerCase();
+
+      if (curBg && curBg !== '#ffffff' && curBg !== '#161616') {
+        lastColoredPopBg = curBg;
+      }
+      if (curTxt && curTxt !== '#111111' && curTxt !== '#111827') {
+        lastColoredPopText = curTxt;
+      }
+
       if (val === 'simple_white') {
-        $('#popBgColorInput').value = '#ffffff';
-        $('#popTextColorInput').value = '#111111';
+        if (bgInp) bgInp.value = '#ffffff';
+        if (txtInp) txtInp.value = '#111111';
       } else if (val === 'simple_black') {
-        $('#popBgColorInput').value = '#161616';
-        $('#popTextColorInput').value = '#ffffff';
+        if (bgInp) bgInp.value = '#161616';
+        if (txtInp) txtInp.value = '#ffffff';
       } else if (val === 'glass') {
-        $('#popTextColorInput').value = '#111827';
+        if (bgInp && (curBg === '#ffffff' || curBg === '#161616')) {
+          bgInp.value = lastColoredPopBg || defPopBg;
+        }
+        if (txtInp) txtInp.value = '#111827';
+      } else {
+        if (bgInp && (curBg === '#ffffff' || curBg === '#161616')) {
+          bgInp.value = lastColoredPopBg || defPopBg;
+        }
+        if (txtInp && (curTxt === '#111111' || curTxt === '#111827')) {
+          txtInp.value = lastColoredPopText || '#ffffff';
+        }
       }
       updatePopTailVisibility();
       updatePopLivePreview();
@@ -3608,6 +3781,7 @@
     state.canvas.preset = 'custom';
     state.canvas.width = Math.max(400, Math.min(4096, Number($('#inpCanvasW').value) || 1920));
     state.canvas.height = Math.max(400, Math.min(4096, Number($('#inpCanvasH').value) || 1080));
+    syncFormFromState();
     await saveState();
     redraw();
   };
@@ -3630,6 +3804,7 @@
       const keepImgId = state.bg.imageId;
       const keepType = state.bg.type === 'image' ? 'image' : t.bg.type;
       Object.assign(state.bg, structuredClone(t.bg));
+      state.bg.borderColor = t.bg.borderColor || t.style.accent || state.bg.borderColor;
       if (keepImgId) {
         state.bg.imageId = keepImgId;
         state.bg.type = keepType;
@@ -3701,6 +3876,7 @@
     if (!t) return;
     state.style.theme = k;
     Object.assign(state.bg, structuredClone(t.bg));
+    state.bg.borderColor = t.bg.borderColor || t.style.accent || state.bg.borderColor;
     state.bg.imageId = '';
     Object.assign(state.style, structuredClone(t.style));
     state.style.colorMode = curMode;
@@ -3723,12 +3899,31 @@
     toast('「フォント設定」を初期値に戻しました', 'success');
   });
 
+  function resetLabelCustomizeParams() {
+    state.layout.labelPosition = DEFAULT.layout.labelPosition;
+    state.layout.labelScale = DEFAULT.layout.labelScale;
+    state.layout.labelTextScale = DEFAULT.layout.labelTextScale;
+    state.layout.labelAngle = DEFAULT.layout.labelAngle;
+    state.layout.labelBorder = DEFAULT.layout.labelBorder;
+    state.layout.labelBorderWidth = DEFAULT.layout.labelBorderWidth;
+    state.layout.labelShadow = DEFAULT.layout.labelShadow;
+  }
+
+  $('#btnResetLabelCustomize')?.addEventListener('click', async () => {
+    resetLabelCustomizeParams();
+    syncFormFromState();
+    await saveState();
+    redraw();
+    toast('ラベル形状のカスタマイズ設定を標準に戻しました', 'success');
+  });
+
   $('#btnResetItemSettings')?.addEventListener('click', async () => {
     const ok = await confirmModal('設定のリセット', '「書名・頒価・項目設定」の設定をすべて初期値（デフォルト）に戻しますか？');
     if (!ok) return;
     const modeDef = COLOR_MODES[getActiveColorMode()] || COLOR_MODES.classic;
     state.layout.textScale = DEFAULT.layout.textScale;
     state.layout.labelStyle = DEFAULT.layout.labelStyle;
+    resetLabelCustomizeParams();
     state.layout.showTitle = DEFAULT.layout.showTitle;
     state.layout.titleFit = DEFAULT.layout.titleFit;
     state.layout.titleScale = DEFAULT.layout.titleScale;
@@ -3774,6 +3969,7 @@
     const themes = getActiveThemes();
     const curTheme = themes[state.style.theme] || themes.cool;
     state.bg = Object.assign(structuredClone(DEFAULT.bg), structuredClone(curTheme.bg));
+    state.bg.borderColor = curTheme.bg.borderColor || curTheme.style.accent || state.bg.borderColor;
     syncFormFromState();
     await saveState();
     updateImageCacheSummary();
@@ -3849,6 +4045,16 @@
   bindInput('#mSpace2', 'meta', 'space2');
 
 
+  function parseJaDateToIso(str) {
+    if (!str) return '';
+    const m = String(str).match(/(\d{4})[年/\-.](\d{1,2})[月/\-.](\d{1,2})/);
+    if (!m) return '';
+    const y = m[1];
+    const mo = String(Number(m[2])).padStart(2, '0');
+    const d = String(Number(m[3])).padStart(2, '0');
+    return `${y}-${mo}-${d}`;
+  }
+
   function formatDateToJaWithDay(val) {
     if (!val) return '';
     const d = new Date(val + 'T00:00:00');
@@ -3861,19 +4067,12 @@
     return `${y}年${m}月${day}日(${w})`;
   }
 
-  const openDate1 = () => {
-    const pick = $('#mDatePick');
-    if (!pick) return;
-    try { pick.showPicker(); } catch (e) { pick.focus(); }
-  };
-  $('#mDate')?.addEventListener('click', openDate1);
-
-  const openDate2 = () => {
-    const pick = $('#mDate2Pick');
-    if (!pick) return;
-    try { pick.showPicker(); } catch (e) { pick.focus(); }
-  };
-  $('#mDate2')?.addEventListener('click', openDate2);
+  $('#mDatePick')?.addEventListener('click', e => {
+    try { e.currentTarget.showPicker?.(); } catch (err) {}
+  });
+  $('#mDate2Pick')?.addEventListener('click', e => {
+    try { e.currentTarget.showPicker?.(); } catch (err) {}
+  });
 
   $('#btnClearDate')?.addEventListener('click', async () => {
     state.meta.date = '';
@@ -3915,12 +4114,6 @@
     const isSf = val === 'space_focus';
     if ($('#rowHeaderSpaceWidth')) $('#rowHeaderSpaceWidth').style.display = isSf ? 'flex' : 'none';
     if ($('#containerSpaceFocusOptions')) $('#containerSpaceFocusOptions').style.display = isSf ? 'flex' : 'none';
-    if (isSf) {
-      state.layout.showHeaderPlace = false;
-      state.layout.showHeaderTime = false;
-      if ($('#lShowHeaderPlace')) $('#lShowHeaderPlace').checked = false;
-      if ($('#lShowHeaderTime')) $('#lShowHeaderTime').checked = false;
-    }
     syncFormFromState();
     await saveState();
     redraw();
@@ -3964,6 +4157,13 @@
   bindInput('#lShowTitle', 'layout', 'showTitle', Boolean);
   bindInput('#lPriceStyle', 'layout', 'priceStyle');
   bindInput('#lLabelStyle', 'layout', 'labelStyle');
+  bindInput('#lLabelPosition', 'layout', 'labelPosition');
+  bindInput('#lLabelScale', 'layout', 'labelScale', Number);
+  bindInput('#lLabelTextScale', 'layout', 'labelTextScale', Number);
+  bindInput('#lLabelAngle', 'layout', 'labelAngle', Number);
+  bindInput('#lLabelBorder', 'layout', 'labelBorder');
+  bindInput('#lLabelBorderWidth', 'layout', 'labelBorderWidth', Number);
+  bindInput('#lLabelShadow', 'layout', 'labelShadow', Boolean);
   bindInput('#lShowGenre', 'layout', 'showGenre', Boolean);
   bindInput('#lShowDate', 'layout', 'showDate', Boolean);
   bindInput('#lShowSpec', 'layout', 'showSpec', Boolean);
@@ -3985,11 +4185,16 @@
   });
 
   // Background bindings
-  bindInput('#bType', 'bg', 'type');
-  $('#bType')?.addEventListener('change', () => {
-    if ($('#bgImageControls')) {
-      $('#bgImageControls').style.display = $('#bType').value === 'image' ? 'flex' : 'none';
+  $('#bType')?.addEventListener('change', async e => {
+    const val = e.target.value;
+    state.bg.type = val;
+    if (val !== 'image' && state.bg.imageId) {
+      state.bg.imageId = '';
     }
+    syncFormFromState();
+    await saveState();
+    updateImageCacheSummary();
+    redraw();
   });
   bindInput('#bColor1', 'bg', 'color1');
   bindInput('#bColor2', 'bg', 'color2');
@@ -4424,10 +4629,13 @@
         const btnPrint = document.createElement('button');
         btnPrint.innerHTML = '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 8h-1V3H6v5H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zM8 5h8v3H8V5zm8 14H8v-4h8v4zm2-6.5c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></svg> 印刷用画面を開く';
         btnPrint.onclick = () => {
-          const imgs = res.pages.map(cv => `<img src="${cv.toDataURL('image/png')}" style="max-width:100%;height:auto;page-break-after:always;border:1px solid #ccc;">`).join('');
+          const imgs = res.pages.map((cv, idx) => {
+            const brk = idx < res.pages.length - 1 ? 'page-break-after:always;break-after:page;' : '';
+            return `<div style="text-align:center;${brk}"><img src="${cv.toDataURL('image/png')}" style="max-width:100%;max-height:96vh;height:auto;border:1px solid #ccc;"></div>`;
+          }).join('');
           const w = window.open('', '_blank');
           if (w) {
-            w.document.write(`<!DOCTYPE html><html><head><title>簡易お品書き印刷</title><style>@page{margin:8mm;}body{margin:0;display:flex;gap:10mm;flex-wrap:wrap;justify-content:center;}</style></head><body>${imgs}<script>window.onload=()=>window.print();<\/script></body></html>`);
+            w.document.write(`<!DOCTYPE html><html><head><title>簡易お品書き印刷</title><style>@page{margin:8mm;}body{margin:0;background:#fff;}</style></head><body>${imgs}<script>window.onload=()=>window.print();<\/script></body></html>`);
             w.document.close();
           } else {
             toast('ポップアップがブロックされました。PNG保存またはPDF出力をご利用ください');
@@ -4475,10 +4683,13 @@
         btnDlHtml.innerHTML = '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg> 帳票HTMLを保存';
         btnDlHtml.onclick = () => {
           const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
-          a.href = URL.createObjectURL(blob);
-          a.download = `当日頒布物帳票_${state.meta.circle || 'circle'}.html`;
+          const circle = (state.meta.circle || 'circle').replace(/[\\/:*?"<>|]/g, '_');
+          a.href = url;
+          a.download = `${getTodayPrefix()}_${circle}_当日頒布物帳票.html`;
           a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
           toast('当日頒布物帳票HTMLを保存しました');
         };
 
@@ -4555,7 +4766,7 @@
     }
     if (embedImages) {
       const usedIds = new Set(state.items.map(i => i.imageId).filter(Boolean));
-      if (state.bg.imageId) usedIds.add(state.bg.imageId);
+      if (state.bg.type === 'image' && state.bg.imageId) usedIds.add(state.bg.imageId);
       for (const p of (state.pops || [])) {
         if (p.imageId) usedIds.add(p.imageId);
       }
@@ -4572,6 +4783,7 @@
 
   async function clearAllCustomFonts() {
     if (!window.CustomFonts) return;
+    archiveCustomFonts();
     if (typeof CustomFonts.clear === 'function') {
       await CustomFonts.clear();
     } else if (CustomFonts.data) {
@@ -4591,6 +4803,8 @@
     next.items = [];
     next.placed = [];
     next.pops = [];
+    next.genres = [];
+    next.genreColors = {};
     let csvHasGenres = false;
     let csvHasPops = false;
 
@@ -4741,12 +4955,21 @@
       }
     }
 
+    for (const it of next.items) {
+      if (it.genre && !next.genres.includes(it.genre)) {
+        next.genres.push(it.genre);
+        next.genreColors[it.genre] = Render.getGenreColor(it.genre, next.style?.accent || '#ff4b00', next);
+      }
+    }
+    const finalGenreColors = structuredClone(next.genreColors);
     state = merge(DEFAULT, next);
+    state.genreColors = finalGenreColors;
     savePickedPcFonts(state.pickedPcFonts);
     if (typeof window !== 'undefined') window.state = state;
     selectedPlacedUid = state.placed[0]?.uid || null;
 
-    await saveState();
+    archiveCustomFonts();
+    await saveState(false, true);
     syncFormFromState();
     renderGenreOptions();
     renderLibrary();
@@ -4777,7 +5000,7 @@
       const color = state.genreColors?.[g] || '';
       rows.push(['genre', g, color, '', '', '', '', '']);
     }
-    if (state.bg.imageId) {
+    if (state.bg.type === 'image' && state.bg.imageId) {
       const dUrl = Images.data.get(state.bg.imageId);
       if (dUrl) rows.push(['image', state.bg.imageId, dUrl, '', '', '', '', '']);
     }
@@ -4830,9 +5053,12 @@
           state.subLabelColors[k] = v1;
         } else if (sec === 'genre' && k) {
           if (!Array.isArray(state.genres)) state.genres = [];
-          if (!state.genres.includes(k)) state.genres.push(k);
-          if (!state.genreColors) state.genreColors = {};
-          state.genreColors[k] = v1 || Render.getGenreColor(k, state.style?.accent || '#ff4b00', state);
+          const hasGenre = state.genres.includes(k) || (state.items || []).some(it => it.genre === k);
+          if (hasGenre) {
+            if (!state.genres.includes(k)) state.genres.push(k);
+            if (!state.genreColors) state.genreColors = {};
+            state.genreColors[k] = v1 || Render.getGenreColor(k, state.style?.accent || '#ff4b00', state);
+          }
         } else if (sec === 'image' && k && v1) {
           await Images.put(v1, k);
         } else if (sec === 'custom_font' && k && window.CustomFonts) {
@@ -4863,7 +5089,8 @@
       updateImageCacheSummary();
       renderFontSelectOptions();
       renderCustomFontList();
-      await saveState();
+      archiveCustomFonts();
+      await saveState(false, true);
       redraw();
       toast('デザイン設定を読み込みました', 'success');
     } catch (err) {
@@ -4889,11 +5116,21 @@
   $('#fileCsv').addEventListener('change', async e => {
     const f = e.target.files?.[0];
     if (!f) return;
-    const text = await f.text();
-    const rows = CSV.parse(text);
-    await applyCsvRows(rows);
-    toast('CSVファイルから設定・アイテムを復元しました');
-    e.target.value = '';
+    try {
+      const text = await f.text();
+      const rows = CSV.parse(text);
+      if (!rows || !rows.length) throw new Error('CSVが空です');
+      const knownSections = new Set([...SETTING_SECTIONS, 'genre', 'label_color', 'sub_label_color', 'item', 'pop', 'placed', 'image', 'custom_font', 'picked_pc_font']);
+      const startIdx = rows[0][0] === 'section' ? 1 : 0;
+      const hasValidRow = rows.slice(startIdx).some(r => knownSections.has(r[0]));
+      if (!hasValidRow) throw new Error('有効なお品書きCSVデータが見つかりません');
+      await applyCsvRows(rows);
+      toast('CSVファイルから設定・アイテムを復元しました', 'success');
+    } catch (err) {
+      toast('CSVファイルの読込に失敗しました: ' + (err?.message || err), 'error');
+    } finally {
+      e.target.value = '';
+    }
   });
 
   // フォルダ保存（data/ フォルダ内に CSV + images/ + fonts/ を収容 Ver.0.30 / Ver.0.38）
@@ -4912,7 +5149,7 @@
 
       const imgDir = await dataDir.getDirectoryHandle('images', { create: true });
       const usedIds = new Set(state.items.map(i => i.imageId).filter(Boolean));
-      if (state.bg.imageId) usedIds.add(state.bg.imageId);
+      if (state.bg.type === 'image' && state.bg.imageId) usedIds.add(state.bg.imageId);
       for (const p of (state.pops || [])) {
         if (p.imageId) usedIds.add(p.imageId);
       }
@@ -5118,10 +5355,14 @@
         debounceTimer = null;
       }
       debounceBaseJson = null;
+      debounceBaseFontIds = null;
       undoStack.length = 0;
       redoStack.length = 0;
+      undoFontStack.length = 0;
+      redoFontStack.length = 0;
       updateUndoRedoButtons();
       lastSavedStateJson = JSON.stringify(state);
+      lastSavedFontIds = getCurrentCustomFontIds();
       await saveState(true);
       syncFormFromState();
       renderGenreOptions();
@@ -5254,10 +5495,26 @@
     return '#' + (0x1000000 + (r << 16) + (g << 8) + b).toString(16).slice(1);
   }
 
+  function isLightHexColor(hex) {
+    if (!hex || !hex.startsWith('#') || (hex.length !== 7 && hex.length !== 4)) return false;
+    let h = hex.slice(1);
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    return (r * 0.299 + g * 0.587 + b * 0.114) > 140;
+  }
+
   const UI_CUSTOM_VARS = [
-    '--bg', '--stage-bg', '--panel', '--panel-alt', '--panel-nested',
+    '--bg', '--stage-bg', '--panel', '--panel-2', '--panel-alt', '--panel-nested',
     '--toolbar-bg', '--placed-bg', '--modal-bg', '--modal-head-bg', '--modal-foot-bg',
-    '--text', '--pink', '--pink2', '--pink-soft', '--btn-bg', '--input-bg'
+    '--card-bg-sample', '--chip-bg', '--chip-active-bg',
+    '--text', '--text-muted', '--text-sub', '--muted',
+    '--pink', '--pink2', '--pink-soft',
+    '--btn-bg', '--btn-hover-bg', '--btn-hover-text', '--btn-border',
+    '--input-bg', '--input-border',
+    '--line', '--border', '--line-strong', '--scrollbar-thumb',
+    '--dropzone-bg', '--dropzone-border'
   ];
 
   function clearCustomUiInline() {
@@ -5275,30 +5532,55 @@
       return;
     }
     const targets = [document.body.style, document.documentElement.style];
+    const lightPanel = colors.panel ? isLightHexColor(colors.panel) : false;
     for (const st of targets) {
       if (colors.bg) {
         st.setProperty('--bg', colors.bg);
-        st.setProperty('--stage-bg', colors.bg);
+        st.setProperty('--stage-bg', adjustBrightness(colors.bg, isLightHexColor(colors.bg) ? -5 : -3));
       }
       if (colors.panel) {
+        const panelAlt = adjustBrightness(colors.panel, lightPanel ? -4 : 6);
+        const btnBg = adjustBrightness(colors.panel, lightPanel ? -2 : 8);
+        const lineCol = adjustBrightness(colors.panel, lightPanel ? -14 : 12);
+        const borderStrong = adjustBrightness(colors.panel, lightPanel ? -22 : 20);
+        const borderSub = adjustBrightness(colors.panel, lightPanel ? -20 : 16);
+        const nestedBg = adjustBrightness(colors.panel, lightPanel ? -6 : -4);
         st.setProperty('--panel', colors.panel);
+        st.setProperty('--panel-2', panelAlt);
+        st.setProperty('--panel-alt', panelAlt);
         st.setProperty('--toolbar-bg', colors.panel);
         st.setProperty('--placed-bg', colors.panel);
         st.setProperty('--modal-bg', colors.panel);
-        st.setProperty('--modal-foot-bg', colors.panel);
-        st.setProperty('--panel-alt', adjustBrightness(colors.panel, 8));
-        st.setProperty('--modal-head-bg', adjustBrightness(colors.panel, 12));
-        st.setProperty('--panel-nested', adjustBrightness(colors.panel, -6));
-        st.setProperty('--btn-bg', adjustBrightness(colors.panel, 12));
-        st.setProperty('--input-bg', adjustBrightness(colors.panel, -4));
+        st.setProperty('--modal-foot-bg', nestedBg);
+        st.setProperty('--modal-head-bg', adjustBrightness(colors.panel, lightPanel ? -6 : 10));
+        st.setProperty('--panel-nested', nestedBg);
+        st.setProperty('--dropzone-bg', nestedBg);
+        st.setProperty('--btn-bg', btnBg);
+        st.setProperty('--chip-bg', btnBg);
+        st.setProperty('--card-bg-sample', btnBg);
+        st.setProperty('--btn-hover-bg', adjustBrightness(colors.panel, lightPanel ? -8 : 14));
+        st.setProperty('--btn-hover-text', lightPanel ? (colors.accent || colors.text || '#1a2332') : '#ffffff');
+        st.setProperty('--input-bg', adjustBrightness(colors.panel, lightPanel ? -2 : -4));
+        st.setProperty('--line', lineCol);
+        st.setProperty('--border', lineCol);
+        st.setProperty('--line-strong', borderStrong);
+        st.setProperty('--scrollbar-thumb', borderStrong);
+        st.setProperty('--btn-border', borderSub);
+        st.setProperty('--input-border', borderSub);
+        st.setProperty('--dropzone-border', borderSub);
       }
       if (colors.text) {
+        const muted = Render.hexA(colors.text, 0.72);
         st.setProperty('--text', colors.text);
+        st.setProperty('--text-muted', muted);
+        st.setProperty('--text-sub', muted);
+        st.setProperty('--muted', Render.hexA(colors.text, 0.56));
       }
       if (colors.accent) {
         st.setProperty('--pink', colors.accent);
         st.setProperty('--pink2', adjustBrightness(colors.accent, 15));
-        st.setProperty('--pink-soft', colors.accent + '26');
+        st.setProperty('--pink-soft', Render.hexA(colors.accent, 0.16));
+        st.setProperty('--chip-active-bg', colors.accent);
       }
     }
     if (save) {
@@ -5641,9 +5923,14 @@
 
   const saved = await DB.get('state');
   if (saved && typeof saved === 'object') {
+    const hasSavedGenres = Array.isArray(saved.genres);
     state = merge(DEFAULT, saved);
     if (typeof window !== 'undefined') window.state = state;
-    if (!state.genres || !state.genres.length) state.genres = structuredClone(DEFAULT.genres);
+    if (!hasSavedGenres) {
+      state.genres = structuredClone(DEFAULT.genres);
+    } else if (saved.genreColors && typeof saved.genreColors === 'object') {
+      state.genreColors = structuredClone(saved.genreColors);
+    }
     if (!state.pops) state.pops = structuredClone(DEFAULT.pops);
     if (!Array.isArray(saved.pickedPcFonts)) {
       const storedPicked = readPickedPcFontsFromStorage();
@@ -5678,7 +5965,9 @@
   }
 
   // 起動時の初期状態をスナップショット記録してUndo/Redoボタン状態を更新 (Ver.0.55)
+  archiveCustomFonts();
   lastSavedStateJson = JSON.stringify(state);
+  lastSavedFontIds = getCurrentCustomFontIds();
   updateUndoRedoButtons();
 
   // Webフォント読み込み完了時のキャンバス再描画

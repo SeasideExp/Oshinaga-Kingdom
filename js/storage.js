@@ -83,7 +83,7 @@ const Images = {
         if (p.imageId) used.add(p.imageId);
       }
     }
-    if (state.bg && state.bg.imageId) {
+    if (state.bg && state.bg.type === 'image' && state.bg.imageId) {
       used.add(state.bg.imageId);
     }
     return used;

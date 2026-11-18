@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>お品書キングダム～沢山同人誌を並べます！ Ver.1.00</title>
+<title>お品書キングダム～沢山同人誌を並べます！ Ver.1.02</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=M+PLUS+Rounded+1c:wght@400;700;800&family=Zen+Maru+Gothic:wght@400;700;900&family=Noto+Serif+JP:wght@400;700;900&family=Dela+Gothic+One&family=Kosugi+Maru&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
 <header class="topbar">
   <div class="logo">
     👑 <b>お品書キングダム</b><span>～沢山同人誌を並べます！</span>
-    <small class="ver-badge">Ver.1.00</small>
+    <small class="ver-badge">Ver.1.02</small>
     <div class="topbar-links">
       <button type="button" id="btnAbout" class="topbar-link-btn">このツールについて</button>
       <button type="button" id="btnHelp" class="topbar-link-btn"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg> ヘルプ</button>
@@ -247,8 +247,11 @@
           <div class="field">
             <span>日付 (1日目)</span>
             <div class="row" style="gap:4px;">
-              <input id="mDate" readonly placeholder="カレンダーから日付を選択" style="flex:1;cursor:pointer;">
-              <input type="date" id="mDatePick" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;">
+              <input id="mDate" placeholder="日付を入力、またはカレンダーから選択" style="flex:1;">
+              <div style="position:relative;display:inline-flex;align-items:center;">
+                <button type="button" id="btnPickDate" class="sm" title="カレンダーから日付を選択" style="padding:2px 8px;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg></button>
+                <input type="date" id="mDatePick" title="カレンダーから日付を選択" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;">
+              </div>
               <button type="button" id="btnClearDate" class="sm" title="日付をクリア" style="padding:2px 8px;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
             </div>
           </div>
@@ -373,8 +376,11 @@
             <div class="field">
               <span>2日目 日付</span>
               <div class="row" style="gap:4px;">
-                <input id="mDate2" readonly placeholder="カレンダーから日付を選択" style="flex:1;cursor:pointer;">
-                <input type="date" id="mDate2Pick" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;">
+                <input id="mDate2" placeholder="日付を入力、またはカレンダーから選択" style="flex:1;">
+                <div style="position:relative;display:inline-flex;align-items:center;">
+                  <button type="button" id="btnPickDate2" class="sm" title="カレンダーから2日目日付を選択" style="padding:2px 8px;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg></button>
+                  <input type="date" id="mDate2Pick" title="カレンダーから2日目日付を選択" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;">
+                </div>
                 <button type="button" id="btnClearDate2" class="sm" title="2日目日付をクリア" style="padding:2px 8px;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
               </div>
             </div>
@@ -514,6 +520,9 @@
               <option value="round_rect">角丸四角形（カード左上）</option>
               <option value="circle">シンプルな円形（カード左上）</option>
               <option value="tag">タグ風（カード右上）</option>
+              <option value="heart">ハート型（かわいい・推し活風）</option>
+              <option value="corner_band">コーナー斜め帯（角を斜めに横切る帯）</option>
+              <option value="stamp">スタンプ・検印風（二重枠・ハンコ調）</option>
             </select>
           </div>
           <details id="detailsLabelColors" style="margin-top:6px;background:rgba(0,0,0,0.12);padding:6px 10px;border-radius:6px;border:1px solid var(--line);">
@@ -523,6 +532,49 @@
           <details id="detailsSubLabelColors" style="margin-top:6px;background:rgba(0,0,0,0.12);padding:6px 10px;border-radius:6px;border:1px solid var(--line);">
             <summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--text-muted);user-select:none;">🏷️ ラベル補のカラー設定</summary>
             <div id="subLabelColorList" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;"></div>
+          </details>
+          <details id="detailsLabelCustomize" style="margin-top:6px;background:rgba(0,0,0,0.12);padding:6px 10px;border-radius:6px;border:1px solid var(--line);">
+            <summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--text-muted);user-select:none;">⚙️ ラベル形状のカスタマイズ</summary>
+            <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">
+              <div class="field">
+                <span>配置位置</span>
+                <select id="lLabelPosition">
+                  <option value="auto">各形状の標準</option>
+                  <option value="tl">左上</option>
+                  <option value="tr">右上</option>
+                  <option value="bl">左下</option>
+                  <option value="br">右下</option>
+                </select>
+              </div>
+              <div class="field">
+                <span>サイズ倍率</span>
+                <div class="row"><input type="range" id="lLabelScale" min="60" max="160" step="5" value="100"><span id="valLabelScale">100%</span></div>
+              </div>
+              <div class="field">
+                <span>文字サイズ倍率</span>
+                <div class="row"><input type="range" id="lLabelTextScale" min="70" max="140" step="5" value="100"><span id="valLabelTextScale">100%</span></div>
+              </div>
+              <div class="field">
+                <span>傾き角度</span>
+                <div class="row"><input type="range" id="lLabelAngle" min="-45" max="45" step="1" value="0"><span id="valLabelAngle">0°</span></div>
+              </div>
+              <div class="field">
+                <span>白フチ枠線</span>
+                <select id="lLabelBorder">
+                  <option value="auto">各形状の標準</option>
+                  <option value="on">あり（白フチ）</option>
+                  <option value="off">なし</option>
+                </select>
+              </div>
+              <div class="field">
+                <span>枠線の太さ</span>
+                <div class="row"><input type="range" id="lLabelBorderWidth" min="50" max="200" step="10" value="100"><span id="valLabelBorderWidth">100%</span></div>
+              </div>
+              <div class="chk-row">
+                <label><input type="checkbox" id="lLabelShadow" checked> ラベルに影（ドロップシャドウ）を付ける</label>
+              </div>
+              <button type="button" id="btnResetLabelCustomize" class="btn-subtle-reset" style="margin-top:2px;">↺ ラベル形状カスタマイズを標準に戻す</button>
+            </div>
           </details>
 
           <!-- 書名の設定 -->
@@ -1332,7 +1384,7 @@
       <div style="text-align:center;padding:6px 0;">
         <div style="font-size:36px;margin-bottom:8px;">👑</div>
         <h3 style="margin:0 0 6px;font-size:17px;color:var(--text);">お品書キングダム～沢山同人誌を並べます！</h3>
-        <span class="ver-badge" style="display:inline-block;margin-bottom:8px;">Ver.1.00</span>
+        <span class="ver-badge" style="display:inline-block;margin-bottom:8px;">Ver.1.02</span>
       </div>
       <div class="about-info-list" style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;background:var(--panel-alt);padding:14px 16px;border-radius:8px;border:1px solid var(--line);">
         <div class="row" style="justify-content:space-between;align-items:center;">
@@ -1341,11 +1393,11 @@
         </div>
         <div class="row" style="justify-content:space-between;align-items:center;">
           <span style="color:var(--text-sub);">バージョン名</span>
-          <b style="color:var(--pink);">Ver.1.00</b>
+          <b style="color:var(--pink);">Ver.1.02</b>
         </div>
         <div class="row" style="justify-content:space-between;align-items:center;">
           <span style="color:var(--text-sub);">最終更新日</span>
-          <span style="color:var(--text);">2026年11月16日</span>
+          <span style="color:var(--text);">2026年11月18日</span>
         </div>
         <div class="row" style="justify-content:space-between;align-items:center;">
           <span style="color:var(--text-sub);">著作権表記</span>

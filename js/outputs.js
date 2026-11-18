@@ -194,22 +194,24 @@ const Outputs = (() => {
         // ラベル＋発行年月（＋ジャンル常時表示） (Ver.0.36: ラベル・ラベル補2系統対応)
         const lbl = O.miniShowLabel !== false ? resolveLabel(placed, st.labelColors) : null;
         const subLbl = O.miniShowLabel !== false && resolveSubLabel ? resolveSubLabel(placed, st.subLabelColors) : null;
-        let dateLine = item.pubdate || '発行年月未設定';
+        let dateLine = item.pubdate || '';
         let badgeTxt = '';
         if (lbl && lbl.text) badgeTxt += `【${lbl.text}】`;
         if (subLbl && subLbl.text) badgeTxt += `【${subLbl.text}】`;
         if (badgeTxt) {
-          dateLine = `${badgeTxt} ${dateLine}`;
+          dateLine = dateLine ? `${badgeTxt} ${dateLine}` : badgeTxt;
         }
         if (item.genre) {
-          dateLine = `[${item.genre}] ${dateLine}`;
+          dateLine = dateLine ? `[${item.genre}] ${dateLine}` : `[${item.genre}]`;
         }
-        const dSz = Math.min(3.2 * k, rowH * 0.22);
-        x.font = F(700, dSz, hf);
-        x.fillStyle = '#111111';
-        const dWrapped = wrap(x, dateLine, col2W - padTxt * 2, 1)[0];
-        x.fillText(dWrapped, c2X + padTxt, curY);
-        curY += dSz * 1.3;
+        if (dateLine) {
+          const dSz = Math.min(3.2 * k, rowH * 0.22);
+          x.font = F(700, dSz, hf);
+          x.fillStyle = '#111111';
+          const dWrapped = wrap(x, dateLine, col2W - padTxt * 2, 1)[0];
+          x.fillText(dWrapped, c2X + padTxt, curY);
+          curY += dSz * 1.3;
+        }
 
         // 書名
         if (O.miniShowName !== false && item.name) {
@@ -474,29 +476,29 @@ const Outputs = (() => {
     const colTitleHead = showSpec ? '書名 / ジャンル・コメント' : '書名 / ジャンル';
     const headCols = twoDays
       ? `
-        <th style="width:28px;">No</th>
-        <th style="width:52px;">区分</th>
-        <th>${colTitleHead}</th>
-        <th style="width:66px;">頒価</th>
-        <th style="width:58px;">持込数<br><small>(1日目)</small></th>
-        <th style="width:62px;">当日残った数<br><small>(1日目残)</small></th>
-        <th style="width:62px;">当日出た数<br><small>(1日目頒布)</small></th>
-        <th style="width:54px;">2日目<br><small>追加持込</small></th>
-        <th style="width:66px;">2日目に残った数</th>
-        <th style="width:66px;">2日目に出た数</th>
-        <th style="width:58px;">2日間<br><small>合計出た数</small></th>
-        <th style="width:78px;">頒布金額計 / 備考</th>
+        <th style="width:3%;">No</th>
+        <th style="width:6%;">区分</th>
+        <th style="width:24%;">${colTitleHead}</th>
+        <th style="width:7%;">頒価</th>
+        <th style="width:7%;">持込数<br><small>(1日目)</small></th>
+        <th style="width:7.5%;">当日残った数<br><small>(1日目残)</small></th>
+        <th style="width:7.5%;">当日出た数<br><small>(1日目頒布)</small></th>
+        <th style="width:6.5%;">2日目<br><small>追加持込</small></th>
+        <th style="width:7.5%;">2日目に残った数</th>
+        <th style="width:7.5%;">2日目に出た数</th>
+        <th style="width:7%;">2日間<br><small>合計出た数</small></th>
+        <th style="width:9.5%;">頒布金額計 / 備考</th>
       `
       : `
-        <th style="width:32px;">No</th>
-        <th style="width:60px;">区分</th>
-        <th>${colTitleHead}</th>
-        <th style="width:76px;">頒価</th>
-        <th style="width:78px;">持込数</th>
-        <th style="width:86px;">当日残った数</th>
-        <th style="width:86px;">当日出た数</th>
-        <th style="width:92px;">頒布金額(計)</th>
-        <th style="width:95px;">備考・メモ</th>
+        <th style="width:3.5%;">No</th>
+        <th style="width:7%;">区分</th>
+        <th style="width:33.5%;">${colTitleHead}</th>
+        <th style="width:8%;">頒価</th>
+        <th style="width:8.5%;">持込数</th>
+        <th style="width:9%;">当日残った数</th>
+        <th style="width:9%;">当日出た数</th>
+        <th style="width:10.5%;">頒布金額(計)</th>
+        <th style="width:11%;">備考・メモ</th>
       `;
 
     const sumRow = twoDays
@@ -509,6 +511,8 @@ const Outputs = (() => {
 
     const placeTime = [M.place, M.time].filter(Boolean).join(' ');
     const eventSub = placeTime ? `（${esc(placeTime)}）` : '';
+    const printWidthMm = (orient === 'landscape' ? 297 : 210) - pageMargin * 2;
+    const effCellPadX = twoDays ? Math.min(cellPadX, 3) : cellPadX;
 
     return `<!DOCTYPE html>
 <html lang="ja">
@@ -518,12 +522,17 @@ const Outputs = (() => {
 <style>
   @page { size: A4 ${orient}; margin: ${pageMargin}mm; }
   * { box-sizing: border-box; }
+  html {
+    padding: ${bodyPadding}mm;
+    background: #fff;
+  }
   body {
     font-family: "Noto Sans JP", "Yu Gothic", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
     color: #000;
     background: #fff;
-    margin: 0;
-    padding: ${bodyPadding}mm;
+    width: ${printWidthMm}mm;
+    margin: 0 auto;
+    padding: 0;
     font-size: ${fontSize}pt;
   }
   .sheet-head {
@@ -550,7 +559,7 @@ const Outputs = (() => {
   }
   th, td {
     border: 1.2px solid #000;
-    padding: ${cellPadY}px ${cellPadX}px;
+    padding: ${cellPadY}px ${effCellPadX}px;
     vertical-align: middle;
     word-break: break-word;
   }
@@ -604,7 +613,8 @@ const Outputs = (() => {
   }
   .memo-box b { display: block; border-bottom: 1px solid #000; padding-bottom: 2px; margin-bottom: 3px; }
   @media print {
-    body { padding: 0 !important; }
+    html { padding: 0 !important; }
+    body { width: 100%; margin: 0; padding: 0 !important; }
     .no-print { display: none !important; }
   }
 </style>
@@ -671,7 +681,7 @@ const Outputs = (() => {
       var maxAllowedPx = (pageH_mm - margin_mm - 4) * 3.779527;
       var curH = document.body.scrollHeight;
       if (curH > maxAllowedPx && maxAllowedPx > 200) {
-        var ratio = Math.max(0.65, Math.min(0.99, maxAllowedPx / curH));
+        var ratio = Math.max(0.40, Math.min(0.99, maxAllowedPx / curH));
         // transformではなくzoomを使用することで、印刷時の改ページ判定（pagination）が縮小後のレイアウトに連動する
         document.body.style.zoom = ratio;
       }
